@@ -11,11 +11,12 @@ Token::Token(Type type, const string& source, int first, int last):type(type) {
     text = source.substr(first, last);
 }
 
-std::ostream& operator << ( std::ostream& outs, const Token & tok )
-{
+std::ostream& operator << ( std::ostream& outs, const Token & tok ) {
     switch (tok.type) {
         case Token::FUN: outs << "TOKEN(FUN)"; break;
+        case Token::RETURN: outs << "TOKEN(RETURN)"; break;
         case Token::IDENTIFIER: outs << "TOKEN(IDENTIFIER)"; break;
+        case Token::NUMBER: outs << "TOKEN(NUMBER)"; break;
         case Token::COLON: outs << "TOKEN(COLON)"; break;
         case Token::COMMA: outs << "TOKEN(COMMA)"; break;
         case Token::ASSIGN: outs << "TOKEN(ASSIGN)"; break;
@@ -38,7 +39,6 @@ std::ostream& operator << ( std::ostream& outs, const Token & tok )
         case Token::LE: outs << "TOKEN(LE)"; break;
         case Token::GE: outs << "TOKEN(GE)"; break;
         case Token::EQ: outs << "TOKEN(EQ)"; break;
-        // case Token::NEQ: outs << "TOKEN(NEQ)"; break;
         case Token::RANGE_INCL: outs << "TOKEN(RANGE_INCL)"; break;
         case Token::TRUE: outs << "TOKEN(TRUE)"; break;
         case Token::FALSE: outs << "TOKEN(FALSE)"; break;

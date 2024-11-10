@@ -7,7 +7,20 @@ class Token {
 public:
     enum Type {
         FUN,              // fun
+        RETURN,           // return
+        FOR,              // for
+        WHILE,            // while
+        IF,               // if
+        ELSE,             // else
+        IN,               // in
+        PRINT,            // print !!        
+        TRUE,             // true
+        FALSE,            // false
+        VAR,              // var
+        VAL,              // val (si se utiliza para variables inmutables)
+        END,              // end: fin de un bloque de código        
         IDENTIFIER,       // Identificadores (nombres de variables, funciones, etc.)
+        NUMBER,           // Números
         COLON,            // :
         COMMA,            // ,
         ASSIGN,           // =
@@ -15,14 +28,6 @@ public:
         RIGHT_PAREN,      // )
         LEFT_BRACE,       // {
         RIGHT_BRACE,      // }
-        FOR,              // for
-        WHILE,            // while
-        IF,               // if
-        ELSE,             // else
-        IN,               // in
-        PRINT,            // print | Tener cuidado con el uso de esta palabra
-        
-        // Operadores aritméticos y de comparación
         PLUS,             // +
         MINUS,            // -
         MUL,              // *
@@ -33,17 +38,6 @@ public:
         GE,               // >=
         EQ,               // ==
         RANGE_INCL,       // ..
-
-        // Literales y otros tokens
-        TRUE,             // true
-        FALSE,            // false
-
-        // Palabras reservadas
-        VAR,              // var
-        VAL,              // val (si se utiliza para variables inmutables)
-        END,              // end: fin de un bloque de código
-        
-        // Errores
         ERROR,            // Error
     };
 
