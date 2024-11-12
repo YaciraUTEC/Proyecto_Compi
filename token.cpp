@@ -19,6 +19,7 @@ std::ostream& operator << ( std::ostream& outs, const Token & tok ) {
         case Token::NUMBER: outs << "TOKEN(NUMBER)"; break;
         case Token::COLON: outs << "TOKEN(COLON)"; break;
         case Token::COMMA: outs << "TOKEN(COMMA)"; break;
+        case Token::PCOMMA: outs << "TOKEN(PCOMMA)"; break;
         case Token::ASSIGN: outs << "TOKEN(ASSIGN)"; break;
         case Token::LEFT_PAREN: outs << "TOKEN(LEFT_PAREN)"; break;
         case Token::RIGHT_PAREN: outs << "TOKEN(RIGHT_PAREN)"; break;

@@ -53,8 +53,7 @@ Token* Scanner::nextToken() {
 
     if (isdigit(c)) {
         current++;
-        while (current < input.length() && isdigit(input[current])) current++; 
-            current++;
+        while (current < input.length() && isdigit(input[current])) current++;
         token = new Token(Token::NUMBER, input, first, current - first);
     }
 
@@ -63,9 +62,9 @@ Token* Scanner::nextToken() {
         while (current < input.length() && (isalnum(input[current]) || input[current] == '_')) current++;
         string word = input.substr(first, current - first);
         
-        if (word == "print") token = new Token(Token::PRINT, word, 0, word.length()); // ¡ Revisar
+        if (word == "println") token = new Token(Token::PRINT, word, 0, word.length()); // ¡ Revisar
         else if (word == "fun") token = new Token(Token::FUN, word, 0, word.length());
-        else if (word == "return") token = new Token(Token::FUN, word, 0, word.length());
+        else if (word == "return") token = new Token(Token::RETURN, word, 0, word.length());
         else if (word == "for") token = new Token(Token::FOR, word, 0, word.length());
         else if (word == "in") token = new Token(Token::IN, word, 0, word.length());
         else if (word == "while") token = new Token(Token::WHILE, word, 0, word.length());
@@ -77,7 +76,7 @@ Token* Scanner::nextToken() {
         else if (word == "false") token = new Token(Token::FALSE, word, 0, word.length());
         else token = new Token(Token::IDENTIFIER, word, 0, word.length());
     } 
-    else if (strchr("+-*/()=,:<.", c)) {
+    else if (strchr("+-*/(){}=,;:<>.", c)) {
         switch(c) {
             case '+': token = new Token(Token::PLUS, c); break;
             case '-': token = new Token(Token::MINUS, c); break;
@@ -85,6 +84,7 @@ Token* Scanner::nextToken() {
             case '/': token = new Token(Token::DIV, c); break;
             case ':': token = new Token(Token::COLON, c); break;
             case ',': token = new Token(Token::COMMA, c); break;
+            case ';': token = new Token(Token::PCOMMA, c); break;
             case '(': token = new Token(Token::LEFT_PAREN, c); break;
             case ')': token = new Token(Token::RIGHT_PAREN, c); break;
             case '{': token = new Token(Token::LEFT_BRACE, c); break;

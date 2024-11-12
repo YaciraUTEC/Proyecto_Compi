@@ -23,6 +23,7 @@ public:
         NUMBER,           // Números
         COLON,            // :
         COMMA,            // ,
+        PCOMMA,           // ;
         ASSIGN,           // =
         LEFT_PAREN,       // (
         RIGHT_PAREN,      // )
