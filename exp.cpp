@@ -1,99 +1,252 @@
-#include <iostream>
+// exp.cpp
 #include "exp.h"
+#include "visitor.h"
+
 using namespace std;
-IFExp::IFExp(Exp* cond,Exp* l, Exp* r): cond(cond),left(l),right(r){}
-BinaryExp::BinaryExp(Exp* l, Exp* r, BinaryOp op):left(l),right(r),op(op) {
-    if (op == PLUS_OP || op == MINUS_OP || op == MUL_OP || op == DIV_OP) {
-        type = "int";
-    } else {
-        type = "bool";
-    }
-}
-NumberExp::NumberExp(int v):value(v) {}
-BoolExp::BoolExp(bool v):value(v) {}
-IdentifierExp::IdentifierExp(const string& n):name(n) {}
-Exp::~Exp() {}
-BinaryExp::~BinaryExp() { delete left; delete right; }
-IFExp::~IFExp() {delete cond, delete left; delete right; }
-NumberExp::~NumberExp() { }
-BoolExp::~BoolExp() { }
-IdentifierExp::~IdentifierExp() { }
-AssignStatement::AssignStatement(string id, Exp* e): id(id), rhs(e) {}
-AssignStatement::~AssignStatement() {
-    delete rhs;
-}
-PrintStatement::PrintStatement(Exp* e): e(e) {}
-PrintStatement::~PrintStatement() {
-    delete e;
+
+// Clase Type
+Type::Type(const string& name) : name(name) {}
+Type::~Type() {}
+
+void Type::accept(Visitor* visitor) {
+    visitor->visit(this);
 }
 
-IfStatement::IfStatement(Exp* c, Body* t, Body* e): condition(c), then(t), els(e) {}
-IfStatement::~IfStatement() {
-    delete condition;
-    delete then;
-    delete els;
-}
-WhileStatement::WhileStatement(Exp* c, Body* t): condition(c), b(t) {}
-WhileStatement::~WhileStatement() {
-    delete condition;
-    delete b;
-}
-ForStatement::ForStatement(Exp* s, Exp* e, Exp* st, Body* b): start(s), end(e), step(st), b(b) {}
-ForStatement::~ForStatement() {
-    delete start;
-    delete end;
-    delete step;
-    delete b;
+// Clase Parameter
+Parameter::Parameter(const string& id, Type* type)
+    : identifier(id), type(type) {}
+
+Parameter::~Parameter() {
+    delete type;
 }
 
+// Clase FunctionValueParameter
+FunctionValueParameter::FunctionValueParameter(Parameter* param, Expression* defaultValue)
+    : parameter(param), defaultValue(defaultValue) {}
 
-VarDec::VarDec(string type, list<string> ids): type(type), vars(ids) {}
-VarDec::~VarDec() {}
-
-VarDecList::VarDecList(): vardecs() {}
-void VarDecList::add(VarDec* v) {
-    vardecs.push_back(v);
+FunctionValueParameter::~FunctionValueParameter() {
+    delete parameter;
+    delete defaultValue;
 }
-VarDecList::~VarDecList() {
-    for (auto v: vardecs) {
-        delete v;
+
+// Clase FunctionBody
+FunctionBody::~FunctionBody() {}
+
+// Clase Block
+Block::~Block() {
+    for (Statement* stmt : statements) {
+        delete stmt;
     }
 }
 
-StatementList::StatementList(): stms() {}
-void StatementList::add(Stm* s) {
-    stms.push_back(s);
+void Block::addStatement(Statement* stmt) {
+    statements.push_back(stmt);
 }
-StatementList::~StatementList() {
-    for (auto s: stms) {
-        delete s;
+
+void Block::accept(Visitor* visitor) {
+    visitor->visit(this);
+}
+
+// Clase ExpressionBody
+ExpressionBody::ExpressionBody(Expression* expr)
+    : expression(expr) {}
+
+ExpressionBody::~ExpressionBody() {
+    delete expression;
+}
+
+void ExpressionBody::accept(Visitor* visitor) {
+    visitor->visit(this);
+}
+
+// Clase FunctionDeclaration
+FunctionDeclaration::FunctionDeclaration(const string& id, const list<FunctionValueParameter*>& params, Type* returnType, FunctionBody* body)
+    : identifier(id), parameters(params), returnType(returnType), body(body) {}
+
+FunctionDeclaration::~FunctionDeclaration() {
+    for (FunctionValueParameter* param : parameters) {
+        delete param;
     }
-}
-
-Body::Body(VarDecList* v, StatementList* s): vardecs(v), slist(s) {}
-Body::~Body() {
-    delete vardecs;
-    delete slist;
-}
-
-
-Program::Program(Body* b): body(b) {}
-
-Program::~Program() {
+    delete returnType;
     delete body;
 }
-Stm::~Stm() {}
-string Exp::binopToChar(BinaryOp op) {
-    string  c;
-    switch(op) {
-        case PLUS_OP: c = "+"; break;
-        case MINUS_OP: c = "-"; break;
-        case MUL_OP: c = "*"; break;
-        case DIV_OP: c = "/"; break;
-        case LT_OP: c = "<"; break;
-        case LE_OP: c = "<="; break;
-        case EQ_OP: c = "=="; break;
-        default: c = "$";
-    }
-    return c;
+
+void FunctionDeclaration::accept(Visitor* visitor) {
+    visitor->visit(this);
 }
+
+// Clase VariableDeclaration
+VariableDeclaration::VariableDeclaration(const string& id, Type* type)
+    : identifier(id), type(type) {}
+
+VariableDeclaration::~VariableDeclaration() {
+    delete type;
+}
+
+// Clase ControlStructureBody
+ControlStructureBody::~ControlStructureBody() {}
+
+// Clase StatementBody
+StatementBody::StatementBody(Statement* stmt)
+    : statement(stmt) {}
+
+StatementBody::~StatementBody() {
+    delete statement;
+}
+
+void StatementBody::accept(Visitor* visitor) {
+    visitor->visit(this);
+}
+
+// Clase Statement
+Statement::~Statement() {}
+
+// Clase DeclarationStatement
+DeclarationStatement::DeclarationStatement(Declaration* decl)
+    : declaration(decl) {}
+
+DeclarationStatement::~DeclarationStatement() {
+    delete declaration;
+}
+
+void DeclarationStatement::accept(Visitor* visitor) {
+    visitor->visit(this);
+}
+
+// Clase Assignment
+Assignment::Assignment(const string& id, Expression* expr)
+    : identifier(id), expression(expr) {}
+
+Assignment::~Assignment() {
+    delete expression;
+}
+
+void Assignment::accept(Visitor* visitor) {
+    visitor->visit(this);
+}
+
+// Clase LoopStatement
+LoopStatement::~LoopStatement() {}
+
+// Clase ForStatement
+ForStatement::ForStatement(VariableDeclaration* var, Expression* expr, ControlStructureBody* body)
+    : variable(var), expression(expr), body(body) {}
+
+ForStatement::~ForStatement() {
+    delete variable;
+    delete expression;
+    delete body;
+}
+
+void ForStatement::accept(Visitor* visitor) {
+    visitor->visit(this);
+}
+
+// Clase WhileStatement
+WhileStatement::WhileStatement(Expression* cond, ControlStructureBody* body)
+    : condition(cond), body(body) {}
+
+WhileStatement::~WhileStatement() {
+    delete condition;
+    delete body;
+}
+
+void WhileStatement::accept(Visitor* visitor) {
+    visitor->visit(this);
+}
+
+// Clase ExpressionStatement
+ExpressionStatement::ExpressionStatement(Expression* expr)
+    : expression(expr) {}
+
+ExpressionStatement::~ExpressionStatement() {
+    delete expression;
+}
+
+void ExpressionStatement::accept(Visitor* visitor) {
+    visitor->visit(this);
+}
+
+// Clase Expression
+Expression::~Expression() {}
+
+// Clase BinaryExpression
+BinaryExpression::BinaryExpression(Expression* lhs, Expression* rhs, BinaryOperator op)
+    : left(lhs), right(rhs), op(op) {}
+
+BinaryExpression::~BinaryExpression() {
+    delete left;
+    delete right;
+}
+
+void BinaryExpression::accept(Visitor* visitor) {
+    visitor->visit(this);
+}
+
+// Clase PrimaryExpression
+PrimaryExpression::~PrimaryExpression() {}
+
+// Clase IdentifierExpression
+IdentifierExpression::IdentifierExpression(const string& id)
+    : identifier(id) {}
+
+IdentifierExpression::~IdentifierExpression() {}
+
+void IdentifierExpression::accept(Visitor* visitor) {
+    visitor->visit(this);
+}
+
+// Clase LiteralExpression
+LiteralExpression::LiteralExpression(LiteralType type, const string& value)
+    : type(type), value(value) {}
+
+LiteralExpression::~LiteralExpression() {}
+
+void LiteralExpression::accept(Visitor* visitor) {
+    visitor->visit(this);
+}
+
+// Clase IfExpression
+IfExpression::IfExpression(Expression* cond, ControlStructureBody* thenBody, ControlStructureBody* elseBody)
+    : condition(cond), thenBody(thenBody), elseBody(elseBody) {}
+
+IfExpression::~IfExpression() {
+    delete condition;
+    delete thenBody;
+    delete elseBody;
+}
+
+void IfExpression::accept(Visitor* visitor) {
+    visitor->visit(this);
+}
+
+// Clase StringLiteral
+StringLiteral::StringLiteral(const string& value)
+    : value(value) {}
+
+StringLiteral::~StringLiteral() {}
+
+void StringLiteral::accept(Visitor* visitor) {
+    visitor->visit(this);
+}
+
+// Clase KotlinFile
+void KotlinFile::accept(Visitor& visitor) {
+    visitor.visit(this);
+}
+
+KotlinFile::~KotlinFile() {}
+
+// Clase TopLevelObject
+TopLevelObject::~TopLevelObject() {}
+
+// Clase Declaration
+void Declaration::accept(Visitor& visitor) {
+    visitor.visit(this);
+}
+
+// Clase FunctionBody
+FunctionBody::~FunctionBody() {}
+
+// Clase Visitor (dummy implementations)
+Visitor::~Visitor() {}

@@ -1,0 +1,19 @@
+Program ::= Body 
+Body ::= VarDecList StmtList 
+VarDecList ::= (VarDec)* 
+VarDec ::= “var” Type VarList ; 
+Type ::= id 
+VarList :: id (“,” id)* 
+StmtList ::= Stmt ( ; Stmt )* 
+Stmt ::= id = CExp | 
+    print ( CExp ) 
+    if CExp then Body [else Body] 
+    endif while CExp do Body 
+    endwhile 
+    for (CExp,CExp,CExp) Body 
+    endfor 
+CExp ::= Exp [(<|<=|==) Exp] 
+Exp ::= Term ((+ | -) Term)* 
+Term ::= Factor ((*|/) Factor)* 
+Factor ::= id | Num | Bool | ( Exp ) | ifexp (CExp , CExp , CExp ) 
+Bool ::= “true” | “false” 

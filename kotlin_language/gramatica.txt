@@ -1,0 +1,35 @@
+
+Gramática - Kotlin
+
+kotlinFile ::= {topLevelOject}
+topLevelOject ::= declaration [';']
+declaration ::= functionDeclaration
+functionDeclaration ::= 'fun' Identifier functionValueParameters [':' type] functionBody
+Identifier ::= (Letter | '_ ') {Letter | '_' | UnicodeDigit} | '´' QuotedSymbol {QuotedSymbol} '`'
+functionValueParameters ::= '(' [functionValueParameter {',' functionValueParameter}] ')'
+functionValueParameter ::= parameter ['=' expression]
+parameter ::= Identifier ':' type
+functionBody ::= block | ('=' expression)
+block ::= '{' statements '}'
+statements ::= [statement {';' statement}] [';']
+statement ::= (declaration | assignment | loopStatement | expression)
+assignment ::= Identifier '=' expression
+loopStatement ::= forStatement | whileStatement
+forStatement ::= 'for' '(' variableDeclaration 'in' expression ')' [controlStructureBody]
+variableDeclaration ::= Identifier [':' type]
+controlStructureBody ::= block | statement
+whileStatement ::= 'while' '(' expression ')' (controlStructureBody | ';')
+expression ::= disjunction
+disjunction ::= conjunction {'||' conjunction}
+conjunction ::= equality {'&&' equality}
+equality ::= comparison {('!=' | '==') comparison}
+comparison ::= genericCallLikeComparison {('<' | '>' | '<=' | '>=') genericCallLikeComparison}
+genericCallLikeComparison ::= rangeExpression
+rangeExpression ::= additiveExpression {('..' | '..<') additiveExpression}
+additiveExpression ::= multiplicativeExpression {('+' | '-') multiplicativeExpression}
+multiplicativeExpression ::= primaryExpression {('*' | '/') primaryExpression}
+primaryExpression ::= Identifier | '(' expression ')' | stringLiteral | ifExpression | literalConstant
+ifExpression ::= '(' expression ')' (controlStructureBody | ([controlStructureBody] [';'] 'else' (controlStructureBody | ';')) | ';')
+literalConstant ::= BooleanLiteral | IntegerLiteral | CharacterLiteral
+
+

@@ -1,0 +1,83 @@
+
+Gramática - Kotlin
+
+kotlinFile: topLevelObject* EOF;
+
+topLevelObject: declaration ';'? ;
+
+declaration: functionDeclaration ;
+
+functionDeclaration: 'fun' Identifier functionValueParameters (':' type)? functionBody ;
+
+functionValueParameters: '(' (functionValueParameter (',' functionValueParameter)*)? ')' ;
+
+functionValueParameter: parameter ('=' expression)? ;
+
+parameter: Identifier ':' type ;
+
+functionBody: block | '=' expression ;
+
+block: '{' statements '}' ;
+
+statements: (statement ';')* statement? ;
+
+statement: declaration
+         | assignment
+         | loopStatement
+         | expression
+         ;
+
+assignment: Identifier '=' expression ;
+
+loopStatement: forStatement | whileStatement ;
+
+forStatement: 'for' '(' variableDeclaration 'in' expression ')' controlStructureBody ;
+
+variableDeclaration: Identifier (':' type)? ;
+
+controlStructureBody: block | statement ;
+
+whileStatement: 'while' '(' expression ')' (controlStructureBody | ';') ;
+
+expression: disjunction ;
+
+disjunction: conjunction ( '||' conjunction )* ;
+
+conjunction: equality ( '&&' equality )* ;
+
+equality: comparison ( ('!=' | '==') comparison )* ;
+
+comparison: genericCallLikeComparison ( ('<' | '>' | '<=' | '>=') genericCallLikeComparison )* ;
+
+genericCallLikeComparison: rangeExpression ;
+
+rangeExpression: additiveExpression ( ('..' | '..<') additiveExpression )* ;
+
+additiveExpression: multiplicativeExpression ( ('+' | '-') multiplicativeExpression )* ;
+
+multiplicativeExpression: primaryExpression ( ('*' | '/') primaryExpression )* ;
+
+primaryExpression: Identifier
+                | '(' expression ')'
+                | stringLiteral
+                | ifExpression
+                | literalConstant
+                ;
+
+ifExpression: '(' expression ')' (controlStructureBody | (controlStructureBody? 'else' controlStructureBody?) | ';') ;
+
+literalConstant: BooleanLiteral | IntegerLiteral | CharacterLiteral ;
+
+// Tokens (definiciones simplificadas)
+Identifier: [a-zA-Z_] [a-zA-Z_0-9]* ;
+BooleanLiteral: 'true' | 'false' ;
+IntegerLiteral: [0-9]+ ;
+CharacterLiteral: '\'' . '\'' ;
+stringLiteral: '"' (~["\r\n])* '"' ;
+
+// Ignorar espacios y comentarios
+WS: [ \t\r\n]+ -> skip ;
+COMMENT: '//' ~[\r\n]* -> skip ;
+
+
+

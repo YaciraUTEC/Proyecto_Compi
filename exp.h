@@ -6,157 +6,256 @@
 #include <list>
 #include "visitor.h"
 using namespace std;
-enum BinaryOp { PLUS_OP, MINUS_OP, MUL_OP, DIV_OP,LT_OP, LE_OP, EQ_OP };
 
-class Body;
-
-class Exp {
-public:
-    virtual int  accept(Visitor* visitor) = 0;
-    virtual ~Exp() = 0;
-    static string binopToChar(BinaryOp op);
-};
-class IFExp : public Exp {
-public:
-    Exp *cond,*left, *right;
-    IFExp(Exp *cond, Exp* l, Exp* r);
-    int accept(Visitor* visitor);
-    ~IFExp();
-};
-
-
-class BinaryExp : public Exp {
-public:
-    Exp *left, *right;
-    string type;
-    BinaryOp op;
-    BinaryExp(Exp* l, Exp* r, BinaryOp op);
-    int accept(Visitor* visitor);
-    ~BinaryExp();
+enum BinaryOperator {
+    ADD, 
+    SUB, 
+    MUL, 
+    DIV,
+    LT,
+    GT, 
+    LE, 
+    GE,
+    EQ, 
+    NE,
+    AND, 
+    OR,
+    RANGE
 };
 
-class NumberExp : public Exp {
+// KotlinFile class to represent the entire file
+class KotlinFile {
 public:
-    int value;
-    NumberExp(int v);
-    int accept(Visitor* visitor);
-    ~NumberExp();
+    list<TopLevelObject> topLevelObjects;
+    void accept(Visitor& visitor);
 };
 
-class BoolExp : public Exp {
+// TopLevelObject class to represent any top-level element in the Kotlin file
+class TopLevelObject {
 public:
-    int value;
-    BoolExp(bool v);
-    int accept(Visitor* visitor);
-    ~BoolExp();
+    virtual ~TopLevelObject() = default;
+    virtual void accept(Visitor& visitor) = 0;
 };
 
-class IdentifierExp : public Exp {
+// Declaration class to represent declarations
+class Declaration : public TopLevelObject {
 public:
-    std::string name;
-    IdentifierExp(const std::string& n);
-    int accept(Visitor* visitor);
-    ~IdentifierExp();
-};
-
-class Stm {
-public:
-    virtual int accept(Visitor* visitor) = 0;
-    virtual ~Stm() = 0;
-};
-
-class AssignStatement : public Stm {
-public:
-    std::string id;
-    Exp* rhs;
-    AssignStatement(std::string id, Exp* e);
-    int accept(Visitor* visitor);
-    ~AssignStatement();
-};
-
-class PrintStatement : public Stm {
-public:
-    Exp* e;
-    PrintStatement(Exp* e);
-    int accept(Visitor* visitor);
-    ~PrintStatement();
+    void accept(Visitor& visitor) override;
 };
 
 
-class IfStatement : public Stm {
+// ---
+class Type {
 public:
-    Exp* condition;
-    Body* then;
-    Body* els;
-    IfStatement(Exp* condition, Body* then, Body* els);
-    int accept(Visitor* visitor);
-    ~IfStatement();
-};
-class WhileStatement : public Stm {
-public:
-    Exp* condition;
-    Body* b;
-    WhileStatement(Exp* condition, Body* b);
-    int accept(Visitor* visitor);
-    ~WhileStatement();
+    string name;
+    void accept(Visitor* visitor);
+    Type(const string& name);
+    ~Type();
 };
 
-//FOR(int,int,int) stmlist endfor
-class ForStatement : public Stm {
+class Parameter {
 public:
-    Exp* start;
-    Exp* end;
-    Exp* step;
-    Body* b;
-    ForStatement(Exp* start, Exp* end, Exp* step, Body* b);
-    int accept(Visitor* visitor);
+    string identifier;
+    Type* type;
+
+    Parameter(const string& id, Type* type);
+    ~Parameter();
+};
+
+class FunctionValueParameter {
+public:
+    Parameter* parameter;
+    Expression* defaultValue;
+
+    FunctionValueParameter(Parameter* param, Expression* defaultValue);
+    ~FunctionValueParameter();
+};
+
+
+class FunctionBody {
+public:
+    virtual void accept(Visitor* visitor) = 0;
+    virtual ~FunctionBody() = 0;
+};
+
+class Block : public FunctionBody {
+public:
+    list<Statement*> statements;
+
+    void addStatement(Statement* stmt);
+    void accept(Visitor* visitor);
+    ~Block();
+};
+
+class ExpressionBody : public FunctionBody {
+public:
+    Expression* expression;
+
+    ExpressionBody(Expression* expr);
+    void accept(Visitor* visitor);
+    ~ExpressionBody();
+};
+
+class FunctionDeclaration : public Declaration {
+public:
+    string identifier;
+    list<FunctionValueParameter*> parameters;
+    Type* returnType;
+    FunctionBody* body;
+
+    FunctionDeclaration(const string& id, const list<FunctionValueParameter*>& params, Type* returnType, FunctionBody* body);
+    void accept(Visitor* visitor);
+    ~FunctionDeclaration();
+};
+
+class VariableDeclaration {
+public:
+    string identifier;
+    Type* type;
+
+    VariableDeclaration(const string& id, Type* type);
+    ~VariableDeclaration();
+};
+
+class ControlStructureBody {
+public:
+    virtual void accept(Visitor* visitor) = 0;
+    virtual ~ControlStructureBody() = 0;
+};
+
+// Statement --
+
+class Statement {
+public:
+    virtual void accept(Visitor* visitor) = 0;
+    virtual ~Statement() = 0;
+};
+
+class DeclarationStatement : public Statement {
+public:
+    Declaration* declaration;
+
+    DeclarationStatement(Declaration* decl);
+    void accept(Visitor* visitor);
+    ~DeclarationStatement();
+};
+
+class Assignment : public Statement {
+public:
+    string identifier;
+    Expression* expression;
+
+    Assignment(const string& id, Expression* expr);
+    void accept(Visitor* visitor);
+    ~Assignment();
+};
+
+class LoopStatement : public Statement {
+public:
+    virtual ~LoopStatement() = 0;
+};
+
+class ForStatement : public LoopStatement {
+public:
+    VariableDeclaration* variable;
+    Expression* expression;
+    ControlStructureBody* body;
+
+    ForStatement(VariableDeclaration* var, Expression* expr, ControlStructureBody* body);
+    void accept(Visitor* visitor);
     ~ForStatement();
 };
 
-class VarDec {
+class WhileStatement : public LoopStatement {
 public:
-    string type;
-    list<string> vars;
-    VarDec(string type, list<string> vars);
-    int accept(Visitor* visitor);
-    ~VarDec();
+    Expression* condition;
+    ControlStructureBody* body;
+
+    WhileStatement(Expression* cond, ControlStructureBody* body);
+    void accept(Visitor* visitor);
+    ~WhileStatement();
 };
 
-class VarDecList{
+class ExpressionStatement : public Statement {
 public:
-    list<VarDec*> vardecs;
-    VarDecList();
-    void add(VarDec* vardec);
-    int accept(Visitor* visitor);
-    ~VarDecList();
+    Expression* expression;
+
+    ExpressionStatement(Expression* expr);
+    void accept(Visitor* visitor);
+    ~ExpressionStatement();
 };
 
-class StatementList {
+class StatementBody : public ControlStructureBody {
 public:
-    list<Stm*> stms;
-    StatementList();
-    void add(Stm* stm);
-    int accept(Visitor* visitor);
-    ~StatementList();
+    Statement* statement;
+
+    StatementBody(Statement* stmt);
+    void accept(Visitor* visitor);
+    ~StatementBody();
 };
 
-
-class Body{
+// Expresiones
+class Expression {
 public:
-    VarDecList* vardecs;
-    StatementList* slist;
-    Body(VarDecList* vardecs, StatementList* stms);
-    int accept(Visitor* visitor);
-    ~Body();
+    virtual void accept(Visitor* visitor) = 0;
+    virtual ~Expression() = 0;
 };
 
-class Program {
+class BinaryExpression : public Expression {
 public:
-    Body* body;
-    Program(Body* body);
-    ~Program();
+    Expression* left;
+    Expression* right;
+    BinaryOperator op;
+
+    BinaryExpression(Expression* lhs, Expression* rhs, BinaryOperator op);
+    void accept(Visitor* visitor);
+    ~BinaryExpression();
 };
 
+class PrimaryExpression : public Expression {
+public:
+    virtual ~PrimaryExpression() = 0;
+};
 
+class IdentifierExpression : public PrimaryExpression {
+public:
+    string identifier;
+
+    IdentifierExpression(const string& id);
+    void accept(Visitor* visitor);
+    ~IdentifierExpression();
+};
+
+enum LiteralType { BOOLEAN_LITERAL, INTEGER_LITERAL, CHARACTER_LITERAL, STRING_LITERAL };
+
+class LiteralExpression : public PrimaryExpression {
+public:
+    LiteralType type;
+    string value;
+
+    LiteralExpression(LiteralType type, const string& value);
+    void accept(Visitor* visitor);
+    ~LiteralExpression();
+};
+
+class IfExpression : public PrimaryExpression {
+public:
+    Expression* condition;
+    ControlStructureBody* thenBody;
+    ControlStructureBody* elseBody;
+
+    IfExpression(Expression* cond, ControlStructureBody* thenBody, ControlStructureBody* elseBody);
+    void accept(Visitor* visitor);
+    ~IfExpression();
+};
+
+class StringLiteral : public PrimaryExpression {
+public:
+    string value;
+
+    StringLiteral(const string& value);
+    void accept(Visitor* visitor);
+    ~StringLiteral();
+};
 
 #endif // EXP_H
