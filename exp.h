@@ -8,49 +8,75 @@
 using namespace std;
 
 enum BinaryOperator {
-    ADD, 
-    SUB, 
-    MUL, 
+    ADD,
+    SUB,
+    MUL,
     DIV,
     LT,
-    GT, 
-    LE, 
+    GT,
+    LE,
     GE,
-    EQ, 
+    EQ,
     NE,
-    AND, 
+    AND,
     OR,
     RANGE
 };
 
-// KotlinFile class to represent the entire file
-class KotlinFile {
-public:
-    list<TopLevelObject> topLevelObjects;
-    void accept(Visitor& visitor);
-};
+class FunctionDeclaration;
+class Expression;
 
-// TopLevelObject class to represent any top-level element in the Kotlin file
-class TopLevelObject {
-public:
-    virtual ~TopLevelObject() = default;
-    virtual void accept(Visitor& visitor) = 0;
-};
-
-// Declaration class to represent declarations
-class Declaration : public TopLevelObject {
-public:
-    void accept(Visitor& visitor) override;
-};
-
-
-// ---
 class Type {
 public:
     string name;
     void accept(Visitor* visitor);
     Type(const string& name);
     ~Type();
+};
+
+// KOTLINFILE
+class KotlinFile {
+public:
+    list<Declaration*> decl;
+    void add(Declaration* decl);
+    void print();
+    // int eval();
+};
+
+// DECLARATIONS
+
+class Declaration {
+public:
+    virtual void print() = 0;
+    virtual int eval() = 0;
+    virtual ~Declaration() = 0;
+};
+
+// FUN
+
+class FunctionDeclaration : public Declaration {
+public:
+    string identifier;
+    list<FunctionValueParameter*> parameters;
+    Type* returnType;
+    FunctionBody* body;
+
+    FunctionDeclaration(string id, list<FunctionValueParameter*> params, Type* rtype, FunctionBody* body);
+    ~FunctionDeclaration();
+    void print();
+    int eval();
+};
+
+class PropertyDeclaration : public Declaration {
+public:
+    string ptype; // var o val
+    VariableDeclaration* variable;
+    Expression* expression;
+
+    PropertyDeclaration(string ptype, VariableDeclaration* var, Expression* expr);
+    ~PropertyDeclaration();
+    void print();
+    int eval();
 };
 
 class Parameter {
@@ -71,41 +97,32 @@ public:
     ~FunctionValueParameter();
 };
 
-
 class FunctionBody {
 public:
     virtual void accept(Visitor* visitor) = 0;
     virtual ~FunctionBody() = 0;
 };
 
-class Block : public FunctionBody {
+// ENDFUN
+
+
+class Block { // esto es un statementlist
 public:
     list<Statement*> statements;
 
-    void addStatement(Statement* stmt);
+    Block();
+    void add(Statement* stmt);
     void accept(Visitor* visitor);
     ~Block();
 };
 
-class ExpressionBody : public FunctionBody {
+class ExpressionBody {
 public:
     Expression* expression;
 
     ExpressionBody(Expression* expr);
     void accept(Visitor* visitor);
     ~ExpressionBody();
-};
-
-class FunctionDeclaration : public Declaration {
-public:
-    string identifier;
-    list<FunctionValueParameter*> parameters;
-    Type* returnType;
-    FunctionBody* body;
-
-    FunctionDeclaration(const string& id, const list<FunctionValueParameter*>& params, Type* returnType, FunctionBody* body);
-    void accept(Visitor* visitor);
-    ~FunctionDeclaration();
 };
 
 class VariableDeclaration {
@@ -117,18 +134,14 @@ public:
     ~VariableDeclaration();
 };
 
-class ControlStructureBody {
-public:
-    virtual void accept(Visitor* visitor) = 0;
-    virtual ~ControlStructureBody() = 0;
-};
-
-// Statement --
+// STATEMENTS
 
 class Statement {
 public:
-    virtual void accept(Visitor* visitor) = 0;
+    // virtual void accept(Visitor* visitor) = 0;
     virtual ~Statement() = 0;
+    virtual void print() = 0;
+    virtual int eval() = 0;
 };
 
 class DeclarationStatement : public Statement {
@@ -136,44 +149,47 @@ public:
     Declaration* declaration;
 
     DeclarationStatement(Declaration* decl);
-    void accept(Visitor* visitor);
+    // void accept(Visitor* visitor);
     ~DeclarationStatement();
+    void print();
+    int eval();
 };
 
-class Assignment : public Statement {
+class AssignmentStatement : public Statement {
 public:
     string identifier;
     Expression* expression;
 
-    Assignment(const string& id, Expression* expr);
-    void accept(Visitor* visitor);
-    ~Assignment();
+    AssignmentStatement(string id, Expression* expr);
+    //void accept(Visitor* visitor);
+    ~AssignmentStatement();
+    void print();
+    int eval();
 };
 
-class LoopStatement : public Statement {
-public:
-    virtual ~LoopStatement() = 0;
-};
-
-class ForStatement : public LoopStatement {
+class ForStatement : public Statement {
 public:
     VariableDeclaration* variable;
     Expression* expression;
-    ControlStructureBody* body;
+    Block* body;
 
-    ForStatement(VariableDeclaration* var, Expression* expr, ControlStructureBody* body);
-    void accept(Visitor* visitor);
+    ForStatement(VariableDeclaration* var, Expression* expr, Block* body);
+    //void accept(Visitor* visitor);
     ~ForStatement();
+    void print();
+    int eval();
 };
 
-class WhileStatement : public LoopStatement {
+class WhileStatement : public Statement {
 public:
     Expression* condition;
-    ControlStructureBody* body;
+    Block* body;
 
-    WhileStatement(Expression* cond, ControlStructureBody* body);
-    void accept(Visitor* visitor);
+    WhileStatement(Expression* cond, Block* body);
+    //void accept(Visitor* visitor);
     ~WhileStatement();
+    void print();
+    int eval();
 };
 
 class ExpressionStatement : public Statement {
@@ -181,17 +197,10 @@ public:
     Expression* expression;
 
     ExpressionStatement(Expression* expr);
-    void accept(Visitor* visitor);
+    // void accept(Visitor* visitor);
     ~ExpressionStatement();
-};
-
-class StatementBody : public ControlStructureBody {
-public:
-    Statement* statement;
-
-    StatementBody(Statement* stmt);
-    void accept(Visitor* visitor);
-    ~StatementBody();
+    void print();
+    int eval();
 };
 
 // Expresiones
@@ -241,10 +250,10 @@ public:
 class IfExpression : public PrimaryExpression {
 public:
     Expression* condition;
-    ControlStructureBody* thenBody;
-    ControlStructureBody* elseBody;
+    Block* thenBody;
+    Block* elseBody;
 
-    IfExpression(Expression* cond, ControlStructureBody* thenBody, ControlStructureBody* elseBody);
+    IfExpression(Expression* cond, Block* thenBody, Block* elseBody);
     void accept(Visitor* visitor);
     ~IfExpression();
 };
