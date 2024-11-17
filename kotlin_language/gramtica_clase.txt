@@ -1,19 +1,24 @@
-Program ::= Body 
-Body ::= VarDecList StmtList 
+Lab 16
+
+Program ::= VarDecList FunDecList  
 VarDecList ::= (VarDec)* 
-VarDec ::= “var” Type VarList ; 
+FunDecList ::= (FunDec)+ 
+FunDec ::= “fun” Type id “(“[ParamDecList] “)” Body “endfun” 
+Body ::= VarDecList StmtList 
+ParamDecList ::= Type id (“,” Type id)*  
+VarDec ::= “var” Type VarList “;” 
 Type ::= id 
-VarList :: id (“,” id)* 
-StmtList ::= Stmt ( ; Stmt )* 
-Stmt ::= id = CExp | 
-    print ( CExp ) 
-    if CExp then Body [else Body] 
-    endif while CExp do Body 
-    endwhile 
-    for (CExp,CExp,CExp) Body 
-    endfor 
+VarList :: id (“,”id)* 
+StmtList ::= Stmt ( “;” Stmt )* 
+Stmt ::= id “=” CExp | 
+    “print” “(”  CExp “)” 
+    “if” CExp “then” Body [“else” Body] “endif” 
+    “while” CExp “do” Body “endwhile” 
+    “for” “(” CExp “,” CExp “,” CExp “)” Body “endfor” 
+    “return” “(” [CExp] “)” 
 CExp ::= Exp [(<|<=|==) Exp] 
 Exp ::= Term ((+ | -) Term)* 
 Term ::= Factor ((*|/) Factor)* 
-Factor ::= id | Num | Bool | ( Exp ) | ifexp (CExp , CExp , CExp ) 
+Factor ::= id | Num | Bool | “(” Exp “)” | ifexp “(” CExp “,” CExp “,” CExp “)” | id “(” [ArgList] “)”   
+ArgList ::= CExp (“,” CExp)* 
 Bool ::= “true” | “false” 
