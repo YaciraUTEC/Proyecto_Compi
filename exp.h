@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <list>
 #include "visitor.h"
+#include <iostream>
+
 using namespace std;
 
 enum BinaryOperator {
@@ -30,7 +32,7 @@ class Type {
 public:
     string name;
     void accept(Visitor* visitor);
-    Type(const string& name);
+    Type( string name);
     ~Type();
 };
 
@@ -59,9 +61,9 @@ public:
     string identifier;
     list<FunctionValueParameter*> parameters;
     Type* returnType;
-    FunctionBody* body;
+    Block* fbody;
 
-    FunctionDeclaration(string id, list<FunctionValueParameter*> params, Type* rtype, FunctionBody* body);
+    FunctionDeclaration(string id, list<FunctionValueParameter*> params, Type* rtype, Block* fbody);
     ~FunctionDeclaration();
     void print();
     int eval();
@@ -79,12 +81,14 @@ public:
     int eval();
 };
 
+// PARAMETER
+
 class Parameter {
 public:
     string identifier;
     Type* type;
 
-    Parameter(const string& id, Type* type);
+    Parameter(string id, Type* type);
     ~Parameter();
 };
 
@@ -97,14 +101,9 @@ public:
     ~FunctionValueParameter();
 };
 
-class FunctionBody {
-public:
-    virtual void accept(Visitor* visitor) = 0;
-    virtual ~FunctionBody() = 0;
-};
-
 // ENDFUN
 
+// BLOCK
 
 class Block { // esto es un statementlist
 public:
@@ -113,29 +112,24 @@ public:
     Block();
     void add(Statement* stmt);
     void accept(Visitor* visitor);
+    void print();
     ~Block();
 };
 
-class ExpressionBody {
-public:
-    Expression* expression;
 
-    ExpressionBody(Expression* expr);
-    void accept(Visitor* visitor);
-    ~ExpressionBody();
-};
 
 class VariableDeclaration {
 public:
     string identifier;
     Type* type;
 
-    VariableDeclaration(const string& id, Type* type);
+    VariableDeclaration( string id, Type* type);
     ~VariableDeclaration();
 };
 
 // STATEMENTS
 
+// **
 class Statement {
 public:
     // virtual void accept(Visitor* visitor) = 0;
@@ -203,7 +197,11 @@ public:
     int eval();
 };
 
-// Expresiones
+// **
+
+
+// EXPRESSIONS
+
 class Expression {
 public:
     virtual void accept(Visitor* visitor) = 0;
@@ -221,33 +219,29 @@ public:
     ~BinaryExpression();
 };
 
-class PrimaryExpression : public Expression {
-public:
-    virtual ~PrimaryExpression() = 0;
-};
 
-class IdentifierExpression : public PrimaryExpression {
+class IdentifierExpression : public Expression {
 public:
     string identifier;
 
-    IdentifierExpression(const string& id);
+    IdentifierExpression( string id);
     void accept(Visitor* visitor);
     ~IdentifierExpression();
 };
 
 enum LiteralType { BOOLEAN_LITERAL, INTEGER_LITERAL, CHARACTER_LITERAL, STRING_LITERAL };
 
-class LiteralExpression : public PrimaryExpression {
+class LiteralExpression : public Expression {
 public:
     LiteralType type;
     string value;
 
-    LiteralExpression(LiteralType type, const string& value);
+    LiteralExpression(LiteralType type,  string value);
     void accept(Visitor* visitor);
     ~LiteralExpression();
 };
 
-class IfExpression : public PrimaryExpression {
+class IfExpression : public Expression {
 public:
     Expression* condition;
     Block* thenBody;
@@ -258,11 +252,11 @@ public:
     ~IfExpression();
 };
 
-class StringLiteral : public PrimaryExpression {
+class StringLiteral : public Expression {
 public:
     string value;
 
-    StringLiteral(const string& value);
+    StringLiteral( string value);
     void accept(Visitor* visitor);
     ~StringLiteral();
 };
