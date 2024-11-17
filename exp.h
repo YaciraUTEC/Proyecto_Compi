@@ -9,22 +9,6 @@
 
 using namespace std;
 
-enum BinaryOp {
-    ADD_OP,
-    SUB_OP,
-    MUL_OP,
-    DIV_OP,
-    LT_OP,
-    GT_OP,
-    LE_OP,
-    GE_OP,
-    EQ_OP,
-    NE_OP,
-    AND_OP,
-    OR_OP,
-    RANGE_OP
-};
-
 class FunctionDeclaration;
 class Expression;
 
@@ -48,15 +32,12 @@ public:
 };
 
 // DECLARATIONS
-
 class Declaration {
 public:
     virtual void print() = 0;
     virtual int eval() = 0;
     virtual ~Declaration() = 0;
 };
-
-// FUN
 
 class FunctionDeclaration : public Declaration {
 public:
@@ -84,7 +65,6 @@ public:
 };
 
 // PARAMETER
-
 class Parameter {
 public:
     string identifier;
@@ -107,10 +87,7 @@ public:
     int eval();
 };
 
-// ENDFUN
-
 // BLOCK
-
 class Block { // esto es un statementlist
 public:
     list<Statement*> statements;
@@ -122,8 +99,6 @@ public:
     ~Block();
 };
 
-
-
 class VariableDeclaration {
 public:
     string identifier;
@@ -133,9 +108,9 @@ public:
     ~VariableDeclaration();
 };
 
-// STATEMENTS
+// ================================================================================================= //
 
-// **
+// STATEMENTS
 class Statement {
 public:
     // virtual void accept(Visitor* visitor) = 0;
@@ -203,11 +178,26 @@ public:
     int eval();
 };
 
-// **
 
+// ================================================================================================= //
+
+enum BinaryOp {
+    ADD_OP,
+    SUB_OP,
+    MUL_OP,
+    DIV_OP,
+    LT_OP,
+    GT_OP,
+    LE_OP,
+    GE_OP,
+    EQ_OP,
+    NE_OP,
+    AND_OP,
+    OR_OP,
+    RANGE_OP
+};
 
 // EXPRESSIONS
-
 class Expression {
 public:
     virtual void accept(Visitor* visitor) = 0;
@@ -216,7 +206,6 @@ public:
     virtual int eval() = 0;
     static string binopToChar(BinaryOp op);
 };
-
 
 class BinaryExpression : public Expression {
 public:
@@ -231,9 +220,6 @@ public:
     int eval();
 };
 
-
-
-
 class IdentifierExpression : public Expression {
 public:
     string identifier;
@@ -241,6 +227,19 @@ public:
     IdentifierExpression(string id);
     void accept(Visitor* visitor);
     ~IdentifierExpression();
+    void print();
+    int eval();
+};
+
+class IfExpression : public Expression {
+public:
+    Expression* condition;
+    Block* thenBody;
+    Block* elseBody;
+
+    IfExpression(Expression* cond, Block* thenBody, Block* elseBody);
+    void accept(Visitor* visitor);
+    ~IfExpression();
     void print();
     int eval();
 };
@@ -255,19 +254,6 @@ public:
     LiteralExpression(LiteralType type, string value);
     void accept(Visitor* visitor);
     ~LiteralExpression();
-};
-
-class IfExpression : public Expression {
-public:
-    Expression* condition;
-    Block* thenBody;
-    Block* elseBody;
-
-    IfExpression(Expression* cond, Block* thenBody, Block* elseBody);
-    void accept(Visitor* visitor);
-    ~IfExpression();
-    void print();
-    int eval();
 };
 
 class StringLiteral : public Expression {

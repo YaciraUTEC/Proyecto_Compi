@@ -38,6 +38,9 @@ public:
         LE,               // <=
         GE,               // >=
         EQ,               // ==
+        OR,               // ||
+        AND,              // &&
+        NOT,              // !
         RANGE_INCL,       // ..
         ERROR,            // Error
     };

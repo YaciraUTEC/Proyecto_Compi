@@ -40,6 +40,9 @@ std::ostream& operator << ( std::ostream& outs, const Token & tok ) {
         case Token::LE: outs << "TOKEN(LE)"; break;
         case Token::GE: outs << "TOKEN(GE)"; break;
         case Token::EQ: outs << "TOKEN(EQ)"; break;
+        case Token::OR: outs << "TOKEN(OR)"; break;
+        case Token::AND: outs << "TOKEN(AND)"; break;
+        case Token::NOT: outs << "TOKEN(NOT)"; break;
         case Token::RANGE_INCL: outs << "TOKEN(RANGE_INCL)"; break;
         case Token::TRUE: outs << "TOKEN(TRUE)"; break;
         case Token::FALSE: outs << "TOKEN(FALSE)"; break;
