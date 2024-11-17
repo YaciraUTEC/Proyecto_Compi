@@ -7,7 +7,7 @@ Expression::~Expression() {}
 Statement::~Statement() {}
 
 // Type
-Type::Type( string name) : name(name) {}
+Type::Type(string name) : name(name) {}
 Type::~Type() {}
 
 void Type::accept(Visitor* visitor) {
@@ -20,26 +20,36 @@ void KotlinFile::add(Declaration* declaration) {
 }
 
 void KotlinFile::print() {
-    for(auto d : decl) {
+    for (auto d : decl) {
         d->print();
     }
 }
 
 // FunctionDeclaration
-FunctionDeclaration::FunctionDeclaration(string id, list<FunctionValueParameter*> params, 
-                                       Type* rtype, Block* body)
-    : identifier(id), parameters(params), returnType(rtype), fbody(body) {}
+FunctionDeclaration::FunctionDeclaration(string id, list<FunctionValueParameter*> params,
+    Type* rtype, Block* body)
+    : identifier(id), parameters(params), returnType(rtype), fbody(body) {
+}
 
 FunctionDeclaration::~FunctionDeclaration() {
     delete returnType;
     delete fbody;
-    for(auto param : parameters) {
+    for (auto param : parameters) {
         delete param;
     }
 }
 
 void FunctionDeclaration::print() {
-    // Implementación de impresión
+    cout << "fun " << identifier << "(";
+    for (auto param : parameters) {
+        param->print();
+    }
+    cout << ")";
+    if (returnType != nullptr) {
+        cout << ": ";
+        returnType->print();
+    }
+    fbody->print();
 }
 
 int FunctionDeclaration::eval() {
@@ -49,7 +59,8 @@ int FunctionDeclaration::eval() {
 
 // PropertyDeclaration
 PropertyDeclaration::PropertyDeclaration(string ptype, VariableDeclaration* var, Expression* expr)
-    : ptype(ptype), variable(var), expression(expr) {}
+    : ptype(ptype), variable(var), expression(expr) {
+}
 
 PropertyDeclaration::~PropertyDeclaration() {
     delete variable;
@@ -64,7 +75,8 @@ Parameter::~Parameter() {
 
 // FunctionValueParameter
 FunctionValueParameter::FunctionValueParameter(Parameter* param, Expression* defaultValue)
-    : parameter(param), defaultValue(defaultValue) {}
+    : parameter(param), defaultValue(defaultValue) {
+}
 
 FunctionValueParameter::~FunctionValueParameter() {
     delete parameter;
@@ -72,8 +84,9 @@ FunctionValueParameter::~FunctionValueParameter() {
 }
 
 // VariableDeclaration
-VariableDeclaration::VariableDeclaration( string id, Type* type) 
-    : identifier(id), type(type) {}
+VariableDeclaration::VariableDeclaration(string id, Type* type)
+    : identifier(id), type(type) {
+}
 VariableDeclaration::~VariableDeclaration() {
     delete type;
 }
@@ -83,7 +96,7 @@ VariableDeclaration::~VariableDeclaration() {
 Block::Block() {}
 
 Block::~Block() {
-    for(auto stmt : statements) {
+    for (auto stmt : statements) {
         delete stmt;
     }
 }
@@ -97,10 +110,11 @@ void Block::accept(Visitor* visitor) {
 }
 
 void Block::print() {
-    // ¡
-    for(auto stmt : statements) {
+    cout << "{" << endl;
+    for (auto stmt : statements) {
         stmt->print();
     }
+    cout << "}" << endl;
 }
 
 // Statements
@@ -118,15 +132,18 @@ int DeclarationStatement::eval() {
     return declaration->eval();
 }
 
-AssignmentStatement::AssignmentStatement(string id, Expression* expr) 
-    : identifier(id), expression(expr) {}
+AssignmentStatement::AssignmentStatement(string id, Expression* expr)
+    : identifier(id), expression(expr) {
+}
 
 AssignmentStatement::~AssignmentStatement() {
     delete expression;
 }
 
 void AssignmentStatement::print() {
-    // Implementación de impresión
+    cout << identifier << " = ";
+    expression->print();
+    cout << ";" << endl;
 }
 
 int AssignmentStatement::eval() {
@@ -135,8 +152,9 @@ int AssignmentStatement::eval() {
 }
 
 // Expressions
-BinaryExpression::BinaryExpression(Expression* lhs, Expression* rhs, BinaryOperator op)
-    : left(lhs), right(rhs), op(op) {}
+BinaryExpression::BinaryExpression(Expression* lhs, Expression* rhs, BinaryOp op)
+    : left(lhs), right(rhs), op(op) {
+}
 
 BinaryExpression::~BinaryExpression() {
     delete left;
@@ -147,7 +165,7 @@ void BinaryExpression::accept(Visitor* visitor) {
     visitor->visit(this);
 }
 
-IdentifierExpression::IdentifierExpression( string id) : identifier(id) {}
+IdentifierExpression::IdentifierExpression(string id) : identifier(id) {}
 
 IdentifierExpression::~IdentifierExpression() {}
 
@@ -156,8 +174,9 @@ void IdentifierExpression::accept(Visitor* visitor) {
 }
 
 // LiteralExpression
-LiteralExpression::LiteralExpression(LiteralType type,  string value)
-    : type(type), value(value) {}
+LiteralExpression::LiteralExpression(LiteralType type, string value)
+    : type(type), value(value) {
+}
 
 LiteralExpression::~LiteralExpression() {}
 
@@ -167,7 +186,8 @@ void LiteralExpression::accept(Visitor* visitor) {
 
 // IfExpression
 IfExpression::IfExpression(Expression* cond, Block* thenBody, Block* elseBody)
-    : condition(cond), thenBody(thenBody), elseBody(elseBody) {}
+    : condition(cond), thenBody(thenBody), elseBody(elseBody) {
+}
 
 IfExpression::~IfExpression() {
     delete condition;
@@ -175,15 +195,81 @@ IfExpression::~IfExpression() {
     delete elseBody;
 }
 
+void IfExpression::print() {
+    cout << "if (";
+    condition->print();
+    cout << ")";
+    thenBody->print();
+    if (elseBody != nullptr) {
+        cout << "else";
+        elseBody->print();
+    }
+    cout << endl;
+}
+
 void IfExpression::accept(Visitor* visitor) {
     visitor->visit(this);
 }
 
 // StringLiteral
-StringLiteral::StringLiteral( string value) : value(value) {}
+StringLiteral::StringLiteral(string value) : value(value) {}
 
 StringLiteral::~StringLiteral() {}
 
 // void StringLiteral::accept(Visitor* visitor) {
 //     visitor->visit(this);
 // }
+
+void BinaryExpression::print() {
+    left->print();
+    cout << " " << binopToChar(op) << " ";
+    right->print();
+};
+
+int BinaryExpression::eval() {
+    int result;
+    int v1 = left->eval();
+    int v2 = right->eval();
+    switch (op) {
+    case ADD_OP: result = v1 + v2; break;
+    case SUB_OP: result = v1 - v2; break;
+    case MUL_OP: result = v1 * v2; break;
+    case DIV_OP: result = v1 / v2; break;
+    case LT_OP: result = v1 < v2; break;
+    case GT_OP: result = v1 > v2; break;
+    case LE_OP: result = v1 <= v2; break;
+    case GE_OP: result = v1 >= v2; break;
+    case EQ_OP: result = v1 == v2; break;
+    case NE_OP: result = v1 != v2; break;
+    case AND_OP: result = v1 && v2; break;
+    case OR_OP: result = v1 || v2; break;
+    case RANGE_OP: result = 0; break;
+    default:
+        cout << "Operador desconocido" << endl;
+        result = 0;
+    }
+    return result;
+};
+
+
+
+string Expression::binopToChar(BinaryOp op) {
+    string  c;
+    switch (op) {
+    case ADD_OP: c = "+"; break;
+    case SUB_OP: c = "-"; break;
+    case MUL_OP: c = "*"; break;
+    case DIV_OP: c = "/"; break;
+    case LT_OP: c = "<"; break;
+    case GT_OP: c = ">"; break;
+    case LE_OP: c = "<="; break;
+    case GE_OP: c = ">="; break;
+    case EQ_OP: c = "=="; break;
+    case NE_OP: c = "!="; break;
+    case AND_OP: c = "&&"; break;
+    case OR_OP: c = "||"; break;
+    case RANGE_OP: c = ".."; break;
+    default: c = "$";
+    }
+    return c;
+}

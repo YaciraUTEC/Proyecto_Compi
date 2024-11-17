@@ -9,20 +9,20 @@
 
 using namespace std;
 
-enum BinaryOperator {
-    ADD,
-    SUB,
-    MUL,
-    DIV,
-    LT,
-    GT,
-    LE,
-    GE,
-    EQ,
-    NE,
-    AND,
-    OR,
-    RANGE
+enum BinaryOp {
+    ADD_OP,
+    SUB_OP,
+    MUL_OP,
+    DIV_OP,
+    LT_OP,
+    GT_OP,
+    LE_OP,
+    GE_OP,
+    EQ_OP,
+    NE_OP,
+    AND_OP,
+    OR_OP,
+    RANGE_OP
 };
 
 class FunctionDeclaration;
@@ -32,8 +32,10 @@ class Type {
 public:
     string name;
     void accept(Visitor* visitor);
-    Type( string name);
+    Type(string name);
     ~Type();
+    void print();
+    int eval();
 };
 
 // KOTLINFILE
@@ -90,6 +92,8 @@ public:
 
     Parameter(string id, Type* type);
     ~Parameter();
+    void print();
+    int eval();
 };
 
 class FunctionValueParameter {
@@ -99,6 +103,8 @@ public:
 
     FunctionValueParameter(Parameter* param, Expression* defaultValue);
     ~FunctionValueParameter();
+    void print();
+    int eval();
 };
 
 // ENDFUN
@@ -123,7 +129,7 @@ public:
     string identifier;
     Type* type;
 
-    VariableDeclaration( string id, Type* type);
+    VariableDeclaration(string id, Type* type);
     ~VariableDeclaration();
 };
 
@@ -206,27 +212,37 @@ class Expression {
 public:
     virtual void accept(Visitor* visitor) = 0;
     virtual ~Expression() = 0;
+    virtual void print() = 0;
+    virtual int eval() = 0;
+    static string binopToChar(BinaryOp op);
 };
+
 
 class BinaryExpression : public Expression {
 public:
     Expression* left;
     Expression* right;
-    BinaryOperator op;
+    BinaryOp op;
 
-    BinaryExpression(Expression* lhs, Expression* rhs, BinaryOperator op);
+    BinaryExpression(Expression* lhs, Expression* rhs, BinaryOp op);
     void accept(Visitor* visitor);
     ~BinaryExpression();
+    void print();
+    int eval();
 };
+
+
 
 
 class IdentifierExpression : public Expression {
 public:
     string identifier;
 
-    IdentifierExpression( string id);
+    IdentifierExpression(string id);
     void accept(Visitor* visitor);
     ~IdentifierExpression();
+    void print();
+    int eval();
 };
 
 enum LiteralType { BOOLEAN_LITERAL, INTEGER_LITERAL, CHARACTER_LITERAL, STRING_LITERAL };
@@ -236,7 +252,7 @@ public:
     LiteralType type;
     string value;
 
-    LiteralExpression(LiteralType type,  string value);
+    LiteralExpression(LiteralType type, string value);
     void accept(Visitor* visitor);
     ~LiteralExpression();
 };
@@ -250,15 +266,19 @@ public:
     IfExpression(Expression* cond, Block* thenBody, Block* elseBody);
     void accept(Visitor* visitor);
     ~IfExpression();
+    void print();
+    int eval();
 };
 
 class StringLiteral : public Expression {
 public:
     string value;
 
-    StringLiteral( string value);
+    StringLiteral(string value);
     void accept(Visitor* visitor);
     ~StringLiteral();
+    void print();
+    int eval();
 };
 
 #endif // EXP_H
