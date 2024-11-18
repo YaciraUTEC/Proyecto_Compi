@@ -43,7 +43,7 @@ Token* Scanner::nextToken() {
         else if (word == "false") token = new Token(Token::FALSE, word, 0, word.length());
         else token = new Token(Token::IDENTIFIER, word, 0, word.length());
     }
-    else if (strchr("+-*/(){}=,;:<>.", c)) {
+    else if (strchr("+-*/(){}=,;:<>.|&", c)) {
         switch (c) {
         case '+': token = new Token(Token::PLUS, c); break;
         case '-': token = new Token(Token::MINUS, c); break;
@@ -99,6 +99,24 @@ Token* Scanner::nextToken() {
             }
             else {
                 token = new Token(Token::NOT, c);
+            }
+            break;
+        case '|':
+            if (current + 1 < input.length() && input[current + 1] == '|') {
+                token = new Token(Token::OR, "||", 0, 2);
+                current++;
+            }
+            else {
+                token = new Token(Token::ERROR, c);
+            }
+            break;
+        case '&':
+            if (current + 1 < input.length() && input[current + 1] == '&') {
+                token = new Token(Token::AND, "&&", 0, 2);
+                current++;
+            }
+            else {
+                token = new Token(Token::ERROR, c);
             }
             break;
         default:
