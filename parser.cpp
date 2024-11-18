@@ -39,7 +39,7 @@ bool Parser::isAtEnd() {
     return (current->type == Token::END);
 }
 
-Parser::Parser(Scanner* sc):scanner(sc) {
+Parser::Parser(Scanner* sc) :scanner(sc) {
     previous = NULL;
     current = scanner->nextToken();
     if (current->type == Token::ERROR) {
@@ -48,251 +48,328 @@ Parser::Parser(Scanner* sc):scanner(sc) {
     }
 }
 
-// ================================================================================================= //
+// =======================================
+// Parsing del archivo principal de Kotlin
+// =======================================
 
 KotlinFile* Parser::parseKotlinFile() {
-    KotlinFile* file = new KotlinFile();
+    KotlinFile* kotlinFile = new KotlinFile();
+
     while (!isAtEnd()) {
-        file->add(parseTopLevelObject());
+        Declaration* decl = parseDeclaration();
+        if (decl != nullptr) {
+            kotlinFile->add(decl);
+        }
     }
-    return file;
+
+    return kotlinFile;
 }
 
-Declaration* Parser::parseTopLevelObject() {
-    Declaration* decl = parseDeclaration();
-    // Revisar el caso del punto y coma opcional
-    match(Token::PCOMMA); // Punto y coma opcional
-    return decl;
-}
+// ================================
+// Parsing de declaraciones
+// ================================
 
 Declaration* Parser::parseDeclaration() {
-    if (match(Token::FUN)) {
-        string identifier = current->text;
-        if (!match(Token::IDENTIFIER)) {
-            cout << "Se esperaba un identificador" << endl;
-        }
-        
-        list<FunctionValueParameter*> params = parseFunctionValueParameters();
-        
-        Type* returnType = nullptr;
-        if (match(Token::COLON)) {
-            // Revisar este caso
-            returnType = parseType();
-        }
-        
-        Block* body = parseFunctionBody();
-        return new FunctionDeclaration(identifier, params, returnType, body);
+    if (match(Token::Type::FUN)) {
+        return parseFunctionDeclaration();
     }
-    throw runtime_error("Declaración no válida");
+    if (match(Token::Type::VAR) || match(Token::Type::VAL)) {
+        return parsePropertyDeclaration();
+    }
+    return nullptr; // Error si no se encuentra una declaración válida
 }
 
+FunctionDeclaration* Parser::parseFunctionDeclaration() {
+    if (!match(Token::Type::IDENTIFIER)) {
+        cout << "Error: Se esperaba un identificador de función" << endl;
+        exit(1);
+    }
 
-// ===
+    string id = previous->text;
+
+    if (!match(Token::Type::LEFT_PAREN)) {
+        cout << "Error: Se esperaba un '(' después del identificador de función" << endl;
+        exit(1);
+    }
+
+    list<FunctionValueParameter*> parameters;
+    while (!check(Token::Type::RIGHT_PAREN)) {
+        Parameter* param = new Parameter(parseVariableDeclaration()->identifier, parseVariableDeclaration()->type);
+        Expression* defaultValue = nullptr;
+
+        if (match(Token::Type::ASSIGN)) {
+            defaultValue = parseExpression();
+        }
+
+        parameters.push_back(new FunctionValueParameter(param, defaultValue));
+
+        if (!match(Token::Type::COMMA) && !check(Token::Type::RIGHT_PAREN)) {
+            cout << "Error: Se esperaba una ',' después de un parámetro de función" << endl;
+            exit(1);
+        }
+    }
+
+    match(Token::Type::RIGHT_PAREN); // Consume ')'
+
+    Type* returnType = nullptr;
+    if (match(Token::Type::COLON)) {
+        if (!match(Token::Type::IDENTIFIER)) {
+            cout << "Error: Se esperaba un tipo de retorno después de ':'" << endl;
+            exit(1);
+        }
+        returnType = new Type(previous->text);
+    }
+
+    Block* fbody = parseBlock();
+
+    return new FunctionDeclaration(id, parameters, returnType, fbody);
+}
+
+PropertyDeclaration* Parser::parsePropertyDeclaration() {
+    string ptype = previous->type == Token::Type::VAR ? "var" : "val";
+
+    VariableDeclaration* variable = parseVariableDeclaration();
+
+    Expression* expression = nullptr;
+    if (match(Token::Type::ASSIGN)) {
+        expression = parseExpression();
+    }
+
+    return new PropertyDeclaration(ptype, variable, expression);
+}
+
+VariableDeclaration* Parser::parseVariableDeclaration() {
+    if (!match(Token::Type::IDENTIFIER)) {
+        cout << "Error: Se esperaba un identificador de variable" << endl;
+        exit(1);
+    }
+
+    string id = previous->text;
+
+    if (!match(Token::Type::COLON)) {
+        cout << "Error: Se esperaba ':' después del identificador de variable" << endl;
+        exit(1);
+    }
+
+    if (!match(Token::Type::IDENTIFIER)) {
+        cout << "Error: Se esperaba un tipo después de ':'" << endl;
+        exit(1);
+    }
+
+    Type* type = new Type(previous->text);
+
+    return new VariableDeclaration(id, type);
+}
+
+// ================================
+// Parsing de bloques y statements
+// ================================
+
+Block* Parser::parseBlock() {
+    if (!match(Token::Type::LEFT_BRACE)) {
+        cout << "Error: Se esperaba un '{' para iniciar un bloque" << endl;
+        exit(1);
+    }
+
+    StatementList* stmtList = parseStatementList();
+
+    if (!match(Token::Type::RIGHT_BRACE)) {
+        cout << "Error: Se esperaba un '}' para finalizar un bloque" << endl;
+        exit(1);
+    }
+
+    return new Block(stmtList);
+}
+
+StatementList* Parser::parseStatementList() {
+    StatementList* stmtList = new StatementList();
+
+    while (!check(Token::Type::RIGHT_BRACE) && !isAtEnd()) {
+        Statement* stmt = parseStatement();
+        if (stmt != nullptr) {
+            stmtList->add(stmt);
+        }
+    }
+
+    return stmtList;
+}
+
+Statement* Parser::parseStatement() {
+    if (current == NULL) {
+        cout << "Error: No hay tokens" << endl;
+        exit(1);
+    }
+    // PARA DECLARATION QUE SON PROPERTY O FUNCTION
+    if (match(Token::Type::VAR) || match(Token::Type::VAL)) {
+        Declaration* decl = parsePropertyDeclaration();
+        return new DeclarationStatement(decl);
+    }
+    else if (match(Token::Type::FUN)) {
+        Declaration* decl = parseFunctionDeclaration();
+        return new DeclarationStatement(decl);
+    }
+    // PARA STATEMENTS QUE SON IF, WHILE, FOR, ASSIGNMENT
+    else if (match(Token::Type::IF)) {
+        return new ExpressionStatement(parseIfExpression());
+    }
+    else if (match(Token::Type::WHILE)) {
+        if (!match(Token::Type::LEFT_PAREN)) {
+            cout << "Error: Se esperaba un '(' después del while" << endl;
+            exit(1);
+        }
+        Expression* condition = parseExpression();
+        if (!match(Token::Type::RIGHT_PAREN)) {
+            cout << "Error: Se esperaba un ')' después de la condición del while" << endl;
+            exit(1);
+        }
+        Block* wbody = parseBlock();
+        return new WhileStatement(condition, wbody);
+    }
+    else if (match(Token::Type::FOR)) {
+        if (!match(Token::Type::LEFT_PAREN)) {
+            cout << "Error: Se esperaba un '(' después del for" << endl;
+            exit(1);
+        }
+        VariableDeclaration* var = parseVariableDeclaration();
+        if (!match(Token::Type::IN)) {
+            cout << "Error: Se esperaba un 'in' después de la variable del for" << endl;
+            exit(1);
+        }
+        Expression* range = parseExpression();
+        Block* body = parseBlock();
+        return new ForStatement(var, range, body);
+    }
+    // PARA ASSIGNS
+    else if (match(Token::Type::IDENTIFIER)) {
+        string id = previous->text;
+        if (match(Token::Type::ASSIGN)) {
+            Expression* expr = parseExpression();
+            return new AssignmentStatement(id, expr);
+        }
+    }
+    else {
+        cout << "Error: Se esperaba un identificador o 'print', pero se encontró: " << *current << endl;
+        exit(1);
+    }
+}
+
+// ================================
+// Parsing de expresiones
+// ================================
 
 Expression* Parser::parseExpression() {
-    return parseConjunction();
+    return parseDisjunction();
+}
+
+Expression* Parser::parseDisjunction() {
+    Expression* expr = parseConjunction();
+
+    while (match(Token::Type::OR)) {
+        expr = new BinaryExpression(expr, parseConjunction(), OR_OP);
+    }
+
+    return expr;
 }
 
 Expression* Parser::parseConjunction() {
     Expression* expr = parseEquality();
-    
-    while (match(Token::OR)) {
-        Expression* right = parseEquality();
-        expr = new BinaryExpression(expr, right, BinaryOp::OR_OP);
+
+    while (match(Token::Type::AND)) {
+        expr = new BinaryExpression(expr, parseEquality(), AND_OP);
     }
-    
+
     return expr;
 }
 
-// Retorno de chat
+Expression* Parser::parseEquality() {
+    Expression* expr = parseComparison();
 
-// // parser.cpp
-// #include "parser.h"
+    while (match(Token::Type::EQ) || match(Token::Type::NE)) {
+        BinaryOp op = previous->type == Token::Type::EQ ? EQ_OP : NE_OP;
+        expr = new BinaryExpression(expr, parseComparison(), op);
+    }
 
-// KotlinFile* Parser::parseKotlinFile() {
-//     KotlinFile* file = new KotlinFile();
-//     while (!isAtEnd()) {
-//         file->add(parseTopLevelObject());
-//     }
-//     return file;
-// }
+    return expr;
+}
 
-// Declaration* Parser::parseTopLevelObject() {
-//     Declaration* decl = parseDeclaration();
-//     match(Token::PCOMMA); // Punto y coma opcional
-//     return decl;
-// }
+Expression* Parser::parseComparison() {
+    Expression* expr = parseRangeExpression();
 
-// Declaration* Parser::parseDeclaration() {
-//     if (match(Token::FUN)) {
-//         string identifier = current->text;
-//         if (!match(Token::IDENTIFIER)) {
-//             throw runtime_error("Se esperaba un identificador");
-//         }
-        
-//         list<FunctionValueParameter*> params = parseFunctionValueParameters();
-        
-//         Type* returnType = nullptr;
-//         if (match(Token::COLON)) {
-//             returnType = parseType();
-//         }
-        
-//         Block* body = parseFunctionBody();
-//         return new FunctionDeclaration(identifier, params, returnType, body);
-//     }
-//     throw runtime_error("Declaración no válida");
-// }
+    while (match(Token::Type::LT) || match(Token::Type::GT) ||
+        match(Token::Type::LE) || match(Token::Type::GE)) {
+        BinaryOp op;
+        if (previous->type == Token::Type::LT) op = LT_OP;
+        else if (previous->type == Token::Type::GT) op = GT_OP;
+        else if (previous->type == Token::Type::LE) op = LE_OP;
+        else op = GE_OP;
 
-// Expression* Parser::parseExpression() {
-//     return parseConjunction();
-// }
+        expr = new BinaryExpression(expr, parseRangeExpression(), op);
+    }
 
-// Expression* Parser::parseConjunction() {
-//     Expression* expr = parseEquality();
-    
-//     while (match(Token::OR)) {
-//         Expression* right = parseEquality();
-//         expr = new BinaryExpression(expr, right, BinaryOp::OR_OP);
-//     }
-    
-//     return expr;
-// }
+    return expr;
+}
 
-// Expression* Parser::parseEquality() {
-//     Expression* expr = parseComparison();
-    
-//     while (match(Token::EQ)) {
-//         Expression* right = parseComparison();
-//         expr = new BinaryExpression(expr, right, BinaryOp::EQ_OP);
-//     }
-    
-//     return expr;
-// }
+Expression* Parser::parseRangeExpression() {
+    Expression* expr = parseAdditiveExpression();
 
-// Expression* Parser::parseComparison() {
-//     Expression* expr = parseGenericCallLikeComparison();
-    
-//     while (match(Token::LT) || match(Token::GT) || 
-//            match(Token::LE) || match(Token::GE)) {
-//         Token* op = previous;
-//         Expression* right = parseGenericCallLikeComparison();
-        
-//         BinaryOp binOp;
-//         if (op->type == Token::LT) binOp = BinaryOp::LT_OP;
-//         else if (op->type == Token::GT) binOp = BinaryOp::GT_OP;
-//         else if (op->type == Token::LE) binOp = BinaryOp::LE_OP;
-//         else binOp = BinaryOp::GE_OP;
-        
-//         expr = new BinaryExpression(expr, right, binOp);
-//     }
-    
-//     return expr;
-// }
+    while (match(Token::Type::RANGE_INCL)) {
+        expr = new BinaryExpression(expr, parseAdditiveExpression(), RANGE_OP);
+    }
 
-// Expression* Parser::parseGenericCallLikeComparison() {
-//     Expression* expr = parseAdditiveExpression();
-    
-//     while (match(Token::RANGE_INCL)) {
-//         Expression* right = parseAdditiveExpression();
-//         expr = new BinaryExpression(expr, right, BinaryOp::RANGE_OP);
-//     }
-    
-//     return expr;
-// }
+    return expr;
+}
 
-// Expression* Parser::parseAdditiveExpression() {
-//     Expression* expr = parseMultiplicativeExpression();
-    
-//     while (match(Token::PLUS) || match(Token::MINUS)) {
-//         Token* op = previous;
-//         Expression* right = parseMultiplicativeExpression();
-        
-//         BinaryOp binOp = (op->type == Token::PLUS) ? BinaryOp::ADD_OP : BinaryOp::SUB_OP;
-//         expr = new BinaryExpression(expr, right, binOp);
-//     }
-    
-//     return expr;
-// }
+Expression* Parser::parseAdditiveExpression() {
+    Expression* expr = parseMultiplicativeExpression();
 
-// Expression* Parser::parseMultiplicativeExpression() {
-//     Expression* expr = parsePrimaryExpression();
-    
-//     while (match(Token::MUL) || match(Token::DIV)) {
-//         Token* op = previous;
-//         Expression* right = parsePrimaryExpression();
-        
-//         BinaryOp binOp = (op->type == Token::MUL) ? BinaryOp::MUL_OP : BinaryOp::DIV_OP;
-//         expr = new BinaryExpression(expr, right, binOp);
-//     }
-    
-//     return expr;
-// }
+    while (match(Token::Type::PLUS) || match(Token::Type::MINUS)) {
+        BinaryOp op = previous->type == Token::Type::PLUS ? ADD_OP : SUB_OP;
+        expr = new BinaryExpression(expr, parseMultiplicativeExpression(), op);
+    }
 
-// Expression* Parser::parsePrimaryExpression() {
-//     if (match(Token::IDENTIFIER)) {
-//         return new IdentifierExpression(previous->text);
-//     }
-    
-//     if (match(Token::LEFT_PAREN)) {
-//         Expression* expr = parseExpression();
-//         if (!match(Token::RIGHT_PAREN)) {
-//             throw runtime_error("Se esperaba ')'");
-//         }
-//         return expr;
-//     }
-    
-//     if (match(Token::IF)) {
-//         return parseIfExpression();
-//     }
-    
-//     // Literales
-//     if (match(Token::NUMBER)) {
-//         return new LiteralExpression(LiteralType::INTEGER_LITERAL, previous->text);
-//     }
-    
-//     if (match(Token::TRUE) || match(Token::FALSE)) {
-//         return new LiteralExpression(LiteralType::BOOLEAN_LITERAL, previous->text);
-//     }
-    
-//     throw runtime_error("Se esperaba una expresión");
-// }
+    return expr;
+}
 
-// Statement* Parser::parseStatement() {
-//     if (match(Token::VAR) || match(Token::VAL)) {
-//         return parseVariableDeclaration();
-//     }
-    
-//     if (match(Token::FOR)) {
-//         return parseForStatement();
-//     }
-    
-//     if (match(Token::WHILE)) {
-//         return parseWhileStatement();
-//     }
-    
-//     if (match(Token::IDENTIFIER) && check(Token::ASSIGN)) {
-//         return parseAssignment();
-//     }
-    
-//     Expression* expr = parseExpression();
-//     return new ExpressionStatement(expr);
-// }
+Expression* Parser::parseMultiplicativeExpression() {
+    Expression* expr = parsePrimaryExpression();
 
-// Block* Parser::parseBlock() {
-//     if (!match(Token::LEFT_BRACE)) {
-//         throw runtime_error("Se esperaba '{'");
-//     }
-    
-//     Block* block = new Block();
-//     while (!check(Token::RIGHT_BRACE) && !isAtEnd()) {
-//         block->add(parseStatement());
-//         match(Token::PCOMMA); // Punto y coma opcional
-//     }
-    
-//     if (!match(Token::RIGHT_BRACE)) {
-//         throw runtime_error("Se esperaba '}'");
-//     }
-    
-//     return block;
-// }
+    while (match(Token::Type::MUL) || match(Token::Type::DIV)) {
+        BinaryOp op = previous->type == Token::Type::MUL ? MUL_OP : DIV_OP;
+        expr = new BinaryExpression(expr, parsePrimaryExpression(), op);
+    }
 
+    return expr;
+}
+
+Expression* Parser::parsePrimaryExpression() {
+    if (match(Token::Type::NUMBER)) {
+        return new LiteralExpression(INTEGER_LITERAL, previous->text);
+    }
+    else if (match(Token::Type::TRUE) || match(Token::Type::FALSE)) {
+        return new LiteralExpression(BOOLEAN_LITERAL, previous->text);
+    }
+    else if (match(Token::Type::IDENTIFIER)) {
+        return new IdentifierExpression(previous->text);
+    }
+    else if (match(Token::Type::LEFT_PAREN)) {
+        Expression* expr = parseExpression();
+        if (!match(Token::Type::RIGHT_PAREN)) {
+            throw std::runtime_error("Expected ')' after expression");
+        }
+        return expr;
+    }
+    cout << "Error: Se esperaba un número, un identificador o un paréntesis, pero se encontró: " << *current << endl;
+    exit(0);
+}
+
+Expression* Parser::parseIfExpression() {
+    Expression* condition = parseExpression();
+    Block* ifBody = parseBlock();
+
+    Block* elseBody = nullptr;
+    if (match(Token::Type::ELSE)) {
+        elseBody = parseBlock();
+    }
+
+    return new IfExpression(condition, ifBody, elseBody);
+}

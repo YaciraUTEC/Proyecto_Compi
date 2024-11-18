@@ -33,11 +33,14 @@ public:
     Parser(Scanner* scanner);
     KotlinFile* parseKotlinFile();
     Declaration* parseDeclaration();
-    //FunctionDeclarationList* parseFunctionDeclarationList();
+
     FunctionDeclaration* parseFunctionDeclaration();
     Block* parseBlock(); // esto es como un parse statementlist
     Statement* parseStatement();
-   // StatementList* parseStatementList();
+    StatementList* parseStatementList();
+    VariableDeclaration* parseVariableDeclaration();
+    PropertyDeclaration* parsePropertyDeclaration();
+
 };
 
 #endif // PARSER_H

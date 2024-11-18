@@ -41,6 +41,7 @@ public:
         OR,               // ||
         AND,              // &&
         NOT,              // !
+        NE,               // !=
         RANGE_INCL,       // ..
         ERROR,            // Error
     };
