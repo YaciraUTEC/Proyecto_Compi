@@ -21,9 +21,9 @@ using namespace std;
 // statement ::= (declaration | assignment | forStatement | whileStatement | expression)
 // assignment ::= Identifier '=' expression
 // loopStatement ::= forStatement | whileStatement
-// forStatement ::= 'for' '(' variableDeclaration 'in' expression ')' [block]
+// forStatement ::= 'for' '(' variableDeclaration 'in' expression ')' block
 // variableDeclaration ::= Identifier [':' type]
-// whileStatement ::= 'while' '(' expression ')' (block | ';')
+// whileStatement ::= 'while' '(' expression ')' block
 // expression ::= disjunction
 // disjunction ::= conjunction {'||' conjunction}
 // conjunction ::= equality {'&&' equality}

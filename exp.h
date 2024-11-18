@@ -26,6 +26,7 @@ public:
 class KotlinFile {
 public:
     list<Declaration*> decl;
+    KotlinFile();
     void add(Declaration* decl);
     void print();
     // int eval();
@@ -90,13 +91,25 @@ public:
 // BLOCK
 class Block { // esto es un statementlist
 public:
+    StatementList* slist;
+
+    Block(StatementList* stms);
+    void accept(Visitor* visitor);
+    void print();
+    int eval();
+    ~Block();
+};
+
+class StatementList {
+public:
     list<Statement*> statements;
 
-    Block();
+    StatementList();
     void add(Statement* stmt);
     void accept(Visitor* visitor);
     void print();
-    ~Block();
+    int eval();
+    ~StatementList();
 };
 
 class VariableDeclaration {
@@ -106,6 +119,8 @@ public:
 
     VariableDeclaration(string id, Type* type);
     ~VariableDeclaration();
+    void print();
+    int eval();
 };
 
 // ================================================================================================= //
@@ -146,9 +161,9 @@ class ForStatement : public Statement {
 public:
     VariableDeclaration* variable;
     Expression* expression;
-    Block* body;
+    Block* fbody;
 
-    ForStatement(VariableDeclaration* var, Expression* expr, Block* body);
+    ForStatement(VariableDeclaration* var, Expression* expr, Block* fbody);
     //void accept(Visitor* visitor);
     ~ForStatement();
     void print();
@@ -158,9 +173,9 @@ public:
 class WhileStatement : public Statement {
 public:
     Expression* condition;
-    Block* body;
+    Block* wbody;
 
-    WhileStatement(Expression* cond, Block* body);
+    WhileStatement(Expression* cond, Block* wbody);
     //void accept(Visitor* visitor);
     ~WhileStatement();
     void print();
@@ -254,6 +269,8 @@ public:
     LiteralExpression(LiteralType type, string value);
     void accept(Visitor* visitor);
     ~LiteralExpression();
+    void print();
+    int eval();
 };
 
 class StringLiteral : public Expression {

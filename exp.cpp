@@ -16,7 +16,7 @@ void Type::accept(Visitor* visitor) {
 
 // KotlinFile
 void KotlinFile::add(Declaration* declaration) {
-    decl.push_back(declaration);
+    this->decl.push_back(declaration);
 }
 
 void KotlinFile::print() {
@@ -67,6 +67,16 @@ PropertyDeclaration::~PropertyDeclaration() {
     delete expression;
 }
 
+void PropertyDeclaration::print() {
+    cout << ptype << " ";
+    variable->print();
+    if (expression != nullptr) {
+        cout << " = ";
+        expression->print();
+    }
+    cout << ";" << endl;
+}
+
 // Parameter
 Parameter::Parameter(string id, Type* type) : identifier(id), type(type) {}
 Parameter::~Parameter() {
@@ -93,17 +103,12 @@ VariableDeclaration::~VariableDeclaration() {
 
 
 // Block
-Block::Block() {}
+Block::Block(StatementList* stms) : slist(stms) {}
 
 Block::~Block() {
-    for (auto stmt : statements) {
-        delete stmt;
-    }
+    delete slist;
 }
 
-void Block::add(Statement* stmt) {
-    statements.push_back(stmt);
-}
 
 void Block::accept(Visitor* visitor) {
     visitor->visit(this);
@@ -111,8 +116,8 @@ void Block::accept(Visitor* visitor) {
 
 void Block::print() {
     cout << "{" << endl;
-    for (auto stmt : statements) {
-        stmt->print();
+    if (slist != nullptr) {
+        slist->print();
     }
     cout << "}" << endl;
 }
@@ -149,6 +154,41 @@ void AssignmentStatement::print() {
 int AssignmentStatement::eval() {
     // Implementación de evaluación
     return 0;
+}
+
+ForStatement::ForStatement(VariableDeclaration* var, Expression* expr, Block* fbody)
+    : variable(var), expression(expr), fbody(fbody) {
+}
+
+ForStatement::~ForStatement() {
+    delete variable;
+    delete expression;
+    delete fbody;
+}
+
+void ForStatement::print() {
+    cout << "for (";
+    variable->print();
+    cout << " in ";
+    expression->print();
+    cout << ")";
+    fbody->print();
+}
+
+WhileStatement::WhileStatement(Expression* cond, Block* wbody)
+    : condition(cond), wbody(wbody) {
+}
+
+WhileStatement::~WhileStatement() {
+    delete condition;
+    delete wbody;
+}
+
+void WhileStatement::print() {
+    cout << "while (";
+    condition->print();
+    cout << ")";
+    wbody->print();
 }
 
 // Expressions

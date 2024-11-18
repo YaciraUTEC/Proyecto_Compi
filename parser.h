@@ -7,60 +7,37 @@
 class Parser {
 private:
     Scanner* scanner;
-    Token *current, *previous;
+    Token* current, * previous;
     bool match(Token::Type ttype);
     bool check(Token::Type ttype);
     bool advance();
     bool isAtEnd();
 
     // Funciones de parsing según la gramática
-    KotlinFile* parseKotlinFile();
-    Declaration* parseTopLevelObject();
-    Declaration* parseDeclaration();
-    FunctionDeclaration* parseFunctionDeclaration();
 
-    list<FunctionValueParameter*> parseFunctionValueParameters();
-    FunctionValueParameter* parseFunctionValueParameter();
-
-    Parameter* parseParameter();
-    Block* parseFunctionBody();
-    Block* parseBlock();
-    
-    list<Statement*> parseStatements();
-    Statement* parseStatement();
-    
-    AssignmentStatement* parseAssignment();
-    
-    Statement* parseLoopStatement();
-    
-    ForStatement* parseForStatement();
-    WhileStatement* parseWhileStatement();
-    VariableDeclaration* parseVariableDeclaration();
-    Block* parseControlStructureBody();
-    
+    list<Statement*> parseStmList();
     Expression* parseExpression();
     Expression* parseDisjunction();
-    
     Expression* parseConjunction();
     Expression* parseEquality();
-    
     Expression* parseComparison();
-
     Expression* parseGenericCallLikeComparison();
-    
     Expression* parseRangeExpression();
-    
-    Expression* parseAdditiveExpression();
-    Expression* parseMultiplicativeExpression();
-    Expression* parsePrimaryExpression();
-    IfExpression* parseIfExpression();
+    Expression* parseAdditiveExpression(); // esto es como un parseexpression
+    Expression* parseMultiplicativeExpression(); // esto es como un parseterm 
+    Expression* parseIfExpression();
+    Expression* parsePrimaryExpression(); // esto es como un parsefactor
 
-    LiteralExpression* parseLiteralConstant();
 
 public:
     Parser(Scanner* scanner);
-    ~Parser();
-    KotlinFile* parse();
+    KotlinFile* parseKotlinFile();
+    Declaration* parseDeclaration();
+    //FunctionDeclarationList* parseFunctionDeclarationList();
+    FunctionDeclaration* parseFunctionDeclaration();
+    Block* parseBlock(); // esto es como un parse statementlist
+    Statement* parseStatement();
+   // StatementList* parseStatementList();
 };
 
 #endif // PARSER_H
