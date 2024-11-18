@@ -1,0 +1,31 @@
+// Gramática - Kotlin
+
+// kotlinFile ::= {declaration [';']}
+// declaration ::= functionDeclaration | propertyDeclaration
+// propertyDeclaration ::= ('val' | 'var') variableDeclaration ['=' expression] [';']
+// functionDeclaration ::= 'fun' Identifier functionValueParameters [':' type] functionBody
+// functionValueParameters ::= '(' [functionValueParameter {',' functionValueParameter}] ')'
+// functionValueParameter ::= parameter ['=' expression]
+// parameter ::= Identifier ':' type
+// functionBody ::= block | ('=' expression)
+// block ::= '{' statements '}'
+// statements ::= [statement {';' statement}] [';']
+// statement ::= (declaration | assignment | forStatement | whileStatement | expression | printlnStatement)
+// assignment ::= Identifier '=' expression
+// forStatement ::= 'for' '(' variableDeclaration 'in' expression ')' block
+// variableDeclaration ::= Identifier [':' type]
+// whileStatement ::= 'while' '(' expression ')' block
+// printlnStatement ::= 'println' '(' expression ')'
+// expression ::= disjunction
+// disjunction ::= conjunction {'||' conjunction}
+// conjunction ::= equality {'&&' equality}
+// equality ::= comparison {('!=' | '==') comparison}
+// comparison ::= genericCallLikeComparison {('<' | '>' | '<=' | '>=') genericCallLikeComparison}
+// genericCallLikeComparison ::= rangeExpression
+// rangeExpression ::= additiveExpression {('..' | '..<') additiveExpression}
+// additiveExpression ::= multiplicativeExpression {('+' | '-') multiplicativeExpression}
+// multiplicativeExpression ::= primaryExpression {('*' | '/') primaryExpression}
+// primaryExpression ::= Identifier | '(' expression ')' | stringLiteral | ifExpression | literalConstant
+// ifExpression ::= '(' expression ')' (block | ([block] [';'] 'else' (block | ';')) | ';')
+// literalConstant ::= BooleanLiteral | IntegerLiteral | CharacterLiteral
+// Identifier ::= (Letter | '_ ') {Letter | '_' | UnicodeDigit} | '´' QuotedSymbol {QuotedSymbol} '`'
