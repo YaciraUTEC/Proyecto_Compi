@@ -4,6 +4,7 @@
 
 #include <list>
 
+/*
 class Visitor {
 public:
     virtual void visit(KotlinFile* file) = 0;
@@ -28,7 +29,7 @@ public:
     virtual ~Visitor() = 0;
 };
 
-
+*/
 
 
 #endif // VISITOR_H

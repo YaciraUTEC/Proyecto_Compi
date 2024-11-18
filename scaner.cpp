@@ -14,16 +14,17 @@ using namespace std;
 // Identifier ::= (Letter | '_ ') {Letter | '_' | UnicodeDigit} | '´' QuotedSymbol {QuotedSymbol} '`'
 // functionValueParameters ::= '(' [functionValueParameter {',' functionValueParameter}] ')'
 // functionValueParameter ::= parameter ['=' expression]
-// parameter git ::= Identifier ':' type
+// parameter ::= Identifier ':' type
 // functionBody ::= block | ('=' expression)
 // block ::= '{' statements '}'
 // statements ::= [statement {';' statement}] [';']
-// statement ::= (declaration | assignment | forStatement | whileStatement | expression)
+// statement ::= (declaration | assignment | forStatement | whileStatement | expression | printlnStatement)
 // assignment ::= Identifier '=' expression
 // loopStatement ::= forStatement | whileStatement
 // forStatement ::= 'for' '(' variableDeclaration 'in' expression ')' block
 // variableDeclaration ::= Identifier [':' type]
 // whileStatement ::= 'while' '(' expression ')' block
+// printlnStatement ::= 'println' '(' expression ')'
 // expression ::= disjunction
 // disjunction ::= conjunction {'||' conjunction}
 // conjunction ::= equality {'&&' equality}

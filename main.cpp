@@ -2,7 +2,7 @@
 #include <fstream>
 #include <string>
 #include "scanner.h"
-// #include "parser.h"
+#include "parser.h"
 // #include "visitor.h"
 
 using namespace std;
@@ -28,9 +28,22 @@ int main(int argc, const char* argv[]) {
 
     Scanner scanner(input.c_str());
 
-    test_scanner(&scanner);
+    //test_scanner(&scanner);
 
     cout << "Scanner exitoso" << endl;
+
+    Parser parser(&scanner);
+    try {
+        KotlinFile* kotlinFile = parser.parseKotlinFile();
+        cout << "parsing exitoso" << endl;
+        kotlinFile->print();
+        cout << "printing exitoso" << endl;
+
+    }
+    catch (const std::runtime_error& e) {
+        cout << e.what() << endl;
+        return 1;
+    }
 
     return 0;
 }

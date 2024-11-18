@@ -11,11 +11,17 @@ using namespace std;
 
 class FunctionDeclaration;
 class Expression;
+class Declaration;
+class Statement;
+class FunctionValueParameter;
+class Block;
+class VariableDeclaration;
+class StatementList;
 
 class Type {
 public:
     string name;
-    void accept(Visitor* visitor);
+    // void accept(Visitor* visitor);
     Type(string name);
     ~Type();
     void print();
@@ -94,7 +100,7 @@ public:
     StatementList* slist;
 
     Block(StatementList* stms);
-    void accept(Visitor* visitor);
+    // void accept(Visitor* visitor);
     void print();
     int eval();
     ~Block();
@@ -106,7 +112,7 @@ public:
 
     StatementList();
     void add(Statement* stmt);
-    void accept(Visitor* visitor);
+    // void accept(Visitor* visitor);
     void print();
     int eval();
     ~StatementList();
@@ -128,7 +134,7 @@ public:
 // STATEMENTS
 class Statement {
 public:
-    // virtual void accept(Visitor* visitor) = 0;
+    // virtual // void accept(Visitor* visitor) = 0;
     virtual ~Statement() = 0;
     virtual void print() = 0;
     virtual int eval() = 0;
@@ -139,7 +145,7 @@ public:
     Declaration* declaration;
 
     DeclarationStatement(Declaration* decl);
-    // void accept(Visitor* visitor);
+    // // void accept(Visitor* visitor);
     ~DeclarationStatement();
     void print();
     int eval();
@@ -151,7 +157,7 @@ public:
     Expression* expression;
 
     AssignmentStatement(string id, Expression* expr);
-    //void accept(Visitor* visitor);
+    //// void accept(Visitor* visitor);
     ~AssignmentStatement();
     void print();
     int eval();
@@ -164,7 +170,7 @@ public:
     Block* fbody;
 
     ForStatement(VariableDeclaration* var, Expression* expr, Block* fbody);
-    //void accept(Visitor* visitor);
+    //// void accept(Visitor* visitor);
     ~ForStatement();
     void print();
     int eval();
@@ -176,7 +182,7 @@ public:
     Block* wbody;
 
     WhileStatement(Expression* cond, Block* wbody);
-    //void accept(Visitor* visitor);
+    //// void accept(Visitor* visitor);
     ~WhileStatement();
     void print();
     int eval();
@@ -187,12 +193,22 @@ public:
     Expression* expression;
 
     ExpressionStatement(Expression* expr);
-    // void accept(Visitor* visitor);
+    // // void accept(Visitor* visitor);
     ~ExpressionStatement();
     void print();
     int eval();
 };
 
+class PrintlnStatement : public Statement {
+public:
+    Expression* expression;
+
+    PrintlnStatement(Expression* expr);
+    // // void accept(Visitor* visitor);
+    ~PrintlnStatement();
+    void print();
+    int eval();
+};
 
 // ================================================================================================= //
 
@@ -215,7 +231,7 @@ enum BinaryOp {
 // EXPRESSIONS
 class Expression {
 public:
-    virtual void accept(Visitor* visitor) = 0;
+    // virtual void accept(Visitor* visitor) = 0;
     virtual ~Expression() = 0;
     virtual void print() = 0;
     virtual int eval() = 0;
@@ -229,7 +245,7 @@ public:
     BinaryOp op;
 
     BinaryExpression(Expression* lhs, Expression* rhs, BinaryOp op);
-    void accept(Visitor* visitor);
+    // void accept(Visitor* visitor);
     ~BinaryExpression();
     void print();
     int eval();
@@ -240,7 +256,7 @@ public:
     string identifier;
 
     IdentifierExpression(string id);
-    void accept(Visitor* visitor);
+    // void accept(Visitor* visitor);
     ~IdentifierExpression();
     void print();
     int eval();
@@ -253,7 +269,7 @@ public:
     Block* elseBody;
 
     IfExpression(Expression* cond, Block* thenBody, Block* elseBody);
-    void accept(Visitor* visitor);
+    // void accept(Visitor* visitor);
     ~IfExpression();
     void print();
     int eval();
@@ -267,7 +283,7 @@ public:
     string value;
 
     LiteralExpression(LiteralType type, string value);
-    void accept(Visitor* visitor);
+    // void accept(Visitor* visitor);
     ~LiteralExpression();
     void print();
     int eval();
@@ -278,7 +294,7 @@ public:
     string value;
 
     StringLiteral(string value);
-    void accept(Visitor* visitor);
+    // void accept(Visitor* visitor);
     ~StringLiteral();
     void print();
     int eval();

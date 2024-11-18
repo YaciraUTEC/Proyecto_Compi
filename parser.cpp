@@ -246,11 +246,23 @@ Statement* Parser::parseStatement() {
             Expression* expr = parseExpression();
             return new AssignmentStatement(id, expr);
         }
+    }else if (match(Token::Type::PRINT)) {
+        if (!match(Token::Type::LEFT_PAREN)) {
+            cout << "Error: Se esperaba un '(' después de 'print'" << endl;
+            exit(1);
+        }
+        Expression* expr = parseExpression();
+        if (!match(Token::Type::RIGHT_PAREN)) {
+            cout << "Error: Se esperaba un ')' después de la expresión de 'print'" << endl;
+            exit(1);
+        }
+        return new PrintlnStatement(expr);
     }
     else {
         cout << "Error: Se esperaba un identificador o 'print', pero se encontró: " << *current << endl;
         exit(1);
     }
+    return nullptr;
 }
 
 // ================================

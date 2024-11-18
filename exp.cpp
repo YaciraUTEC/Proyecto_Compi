@@ -10,11 +10,20 @@ Statement::~Statement() {}
 Type::Type(string name) : name(name) {}
 Type::~Type() {}
 
+void Type::print() {
+    cout << name;
+}
+
+/*
 void Type::accept(Visitor* visitor) {
     visitor->visit(this);
 }
+*/
 
 // KotlinFile
+
+KotlinFile::KotlinFile() {}
+
 void KotlinFile::add(Declaration* declaration) {
     this->decl.push_back(declaration);
 }
@@ -40,22 +49,24 @@ FunctionDeclaration::~FunctionDeclaration() {
 }
 
 void FunctionDeclaration::print() {
-    cout << "fun " << identifier << "(";
-    for (auto param : parameters) {
+    cout << "fun " << this->identifier << "(";
+    for (auto param : this->parameters) {
         param->print();
     }
     cout << ")";
-    if (returnType != nullptr) {
+    if (this->returnType != nullptr) {
         cout << ": ";
-        returnType->print();
+        this->returnType->print();
     }
-    fbody->print();
+    this->fbody->print();
 }
 
 int FunctionDeclaration::eval() {
     // Implementación de evaluación
     return 0;
 }
+
+
 
 // PropertyDeclaration
 PropertyDeclaration::PropertyDeclaration(string ptype, VariableDeclaration* var, Expression* expr)
@@ -77,10 +88,20 @@ void PropertyDeclaration::print() {
     cout << ";" << endl;
 }
 
+int PropertyDeclaration::eval() {
+    // Implementación de evaluación
+    return 0;
+}
+
 // Parameter
 Parameter::Parameter(string id, Type* type) : identifier(id), type(type) {}
 Parameter::~Parameter() {
     delete type;
+}
+
+void Parameter::print() {
+    cout << identifier << ": ";
+    type->print();
 }
 
 // FunctionValueParameter
@@ -93,6 +114,16 @@ FunctionValueParameter::~FunctionValueParameter() {
     delete defaultValue;
 }
 
+
+
+void FunctionValueParameter::print() {
+    parameter->print();
+    if (defaultValue != nullptr) {
+        cout << " = ";
+        defaultValue->print();
+    }
+}
+
 // VariableDeclaration
 VariableDeclaration::VariableDeclaration(string id, Type* type)
     : identifier(id), type(type) {
@@ -101,6 +132,28 @@ VariableDeclaration::~VariableDeclaration() {
     delete type;
 }
 
+void VariableDeclaration::print() {
+    cout << identifier << ": ";
+    type->print();
+}
+
+// Statementlist
+StatementList::StatementList() {}
+void StatementList::add(Statement* stmt) {
+    statements.push_back(stmt);
+}
+
+void StatementList::print() {
+    for (auto stmt : statements) {
+        stmt->print();
+    }
+}
+
+StatementList::~StatementList() {
+    for (auto stmt : statements) {
+        delete stmt;
+    }
+}
 
 // Block
 Block::Block(StatementList* stms) : slist(stms) {}
@@ -109,10 +162,11 @@ Block::~Block() {
     delete slist;
 }
 
-
+/*
 void Block::accept(Visitor* visitor) {
     visitor->visit(this);
 }
+*/
 
 void Block::print() {
     cout << "{" << endl;
@@ -156,6 +210,38 @@ int AssignmentStatement::eval() {
     return 0;
 }
 
+PrintlnStatement::PrintlnStatement(Expression* expr) : expression(expr) {}
+
+PrintlnStatement::~PrintlnStatement() {
+    delete expression;
+}
+
+void PrintlnStatement::print() {
+    cout << "println(";
+    expression->print();
+    cout << ")" << endl;
+}
+
+int PrintlnStatement::eval() {
+    // Implementación de evaluación
+    return 0;
+}
+
+ExpressionStatement::ExpressionStatement(Expression* expr) : expression(expr) {}
+
+void ExpressionStatement::print() {
+    expression->print();
+    cout << ";" << endl;
+}
+
+ExpressionStatement::~ExpressionStatement() {
+    delete expression;
+}
+
+int ExpressionStatement::eval() {
+    return expression->eval();
+}
+
 ForStatement::ForStatement(VariableDeclaration* var, Expression* expr, Block* fbody)
     : variable(var), expression(expr), fbody(fbody) {
 }
@@ -168,11 +254,16 @@ ForStatement::~ForStatement() {
 
 void ForStatement::print() {
     cout << "for (";
-    variable->print();
+    this->variable->print();
     cout << " in ";
-    expression->print();
+    this->expression->print();
     cout << ")";
-    fbody->print();
+    this->fbody->print();
+}
+
+int ForStatement::eval() {
+    // Implementación de evaluación
+    return 0;
 }
 
 WhileStatement::WhileStatement(Expression* cond, Block* wbody)
@@ -191,6 +282,11 @@ void WhileStatement::print() {
     wbody->print();
 }
 
+int WhileStatement::eval() {
+    // Implementación de evaluación
+    return 0;
+}
+
 // Expressions
 BinaryExpression::BinaryExpression(Expression* lhs, Expression* rhs, BinaryOp op)
     : left(lhs), right(rhs), op(op) {
@@ -200,29 +296,59 @@ BinaryExpression::~BinaryExpression() {
     delete left;
     delete right;
 }
-
+/*
 void BinaryExpression::accept(Visitor* visitor) {
     visitor->visit(this);
 }
+*/
 
 IdentifierExpression::IdentifierExpression(string id) : identifier(id) {}
 
 IdentifierExpression::~IdentifierExpression() {}
 
+void IdentifierExpression::print() {
+    cout << identifier;
+}
+
+int IdentifierExpression::eval() {
+    return 0; // falta
+}
+
+/*
 void IdentifierExpression::accept(Visitor* visitor) {
     visitor->visit(this);
 }
+*/
 
 // LiteralExpression
 LiteralExpression::LiteralExpression(LiteralType type, string value)
     : type(type), value(value) {
 }
 
+
 LiteralExpression::~LiteralExpression() {}
 
+void LiteralExpression::print() {
+    cout << value;
+}
+
+int LiteralExpression::eval() {
+    int result;
+    switch (type) {
+    case BOOLEAN_LITERAL: result = value == "true"; break;
+    case INTEGER_LITERAL: result = stoi(value); break;
+    case CHARACTER_LITERAL: result = value[0]; break;
+    case STRING_LITERAL: result = 0; break;
+    default: result = 0;
+    }
+    return result;
+}
+
+/*
 void LiteralExpression::accept(Visitor* visitor) {
     visitor->visit(this);
 }
+*/
 
 // IfExpression
 IfExpression::IfExpression(Expression* cond, Block* thenBody, Block* elseBody)
@@ -247,14 +373,28 @@ void IfExpression::print() {
     cout << endl;
 }
 
+int IfExpression::eval() {
+    // Implementación de evaluación
+    return 0;
+}
+/*
 void IfExpression::accept(Visitor* visitor) {
     visitor->visit(this);
 }
+*/
 
 // StringLiteral
 StringLiteral::StringLiteral(string value) : value(value) {}
 
 StringLiteral::~StringLiteral() {}
+
+void StringLiteral::print() {
+    cout << value;
+}
+
+int StringLiteral::eval() {
+    return 0; // falta
+}
 
 // void StringLiteral::accept(Visitor* visitor) {
 //     visitor->visit(this);
