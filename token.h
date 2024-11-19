@@ -43,6 +43,9 @@ public:
         NOT,              // !
         NE,               // !=
         RANGE_INCL,       // ..
+        STRING,           // String
+        INT,              // Int
+        BOOLEAN,          // Boolean
         ERROR,            // Error
     };
 

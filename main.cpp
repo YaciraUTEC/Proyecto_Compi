@@ -28,7 +28,9 @@ int main(int argc, const char* argv[]) {
 
     Scanner scanner(input.c_str());
 
-    //test_scanner(&scanner);
+    string input_copy = input;
+    Scanner scanner_test(input_copy.c_str());
+    test_scanner(&scanner_test);
 
     cout << "Scanner exitoso" << endl;
 

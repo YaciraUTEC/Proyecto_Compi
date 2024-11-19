@@ -86,9 +86,7 @@ public:
 class FunctionValueParameter {
 public:
     Parameter* parameter;
-    Expression* defaultValue;
-
-    FunctionValueParameter(Parameter* param, Expression* defaultValue);
+    FunctionValueParameter(Parameter* param);
     ~FunctionValueParameter();
     void print();
     int eval();
@@ -271,6 +269,16 @@ public:
     IfExpression(Expression* cond, Block* thenBody, Block* elseBody);
     // void accept(Visitor* visitor);
     ~IfExpression();
+    void print();
+    int eval();
+};
+
+class JumpExpression : public Expression {
+public:
+    Expression* returnExpression;
+    JumpExpression(Expression* ret);
+    // void accept(Visitor* visitor);
+    ~JumpExpression();
     void print();
     int eval();
 };

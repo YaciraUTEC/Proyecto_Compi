@@ -26,6 +26,7 @@ private:
     Expression* parseAdditiveExpression(); // esto es como un parseexpression
     Expression* parseMultiplicativeExpression(); // esto es como un parseterm 
     Expression* parseIfExpression();
+    Expression* parseJumpExpression();
     Expression* parsePrimaryExpression(); // esto es como un parsefactor
 
 

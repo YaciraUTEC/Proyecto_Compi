@@ -9,11 +9,9 @@ Statement::~Statement() {}
 // Type
 Type::Type(string name) : name(name) {}
 Type::~Type() {}
-
 void Type::print() {
-    cout << name;
+    cout << name << " ";
 }
-
 /*
 void Type::accept(Visitor* visitor) {
     visitor->visit(this);
@@ -21,16 +19,14 @@ void Type::accept(Visitor* visitor) {
 */
 
 // KotlinFile
-
 KotlinFile::KotlinFile() {}
-
 void KotlinFile::add(Declaration* declaration) {
     this->decl.push_back(declaration);
 }
-
 void KotlinFile::print() {
     for (auto d : decl) {
         d->print();
+        cout<<endl;
     }
 }
 
@@ -39,7 +35,6 @@ FunctionDeclaration::FunctionDeclaration(string id, list<FunctionValueParameter*
     Type* rtype, Block* body)
     : identifier(id), parameters(params), returnType(rtype), fbody(body) {
 }
-
 FunctionDeclaration::~FunctionDeclaration() {
     delete returnType;
     delete fbody;
@@ -47,18 +42,23 @@ FunctionDeclaration::~FunctionDeclaration() {
         delete param;
     }
 }
-
 void FunctionDeclaration::print() {
     cout << "fun " << this->identifier << "(";
-    for (auto param : this->parameters) {
-        param->print();
+    // hagamoslo con punteros para que no coloque coma en el último
+    for (auto param = this->parameters.begin(); param != this->parameters.end(); param++) {
+        (*param)->print();
+        if (next(param) != this->parameters.end()) {
+            cout << ", ";
+        }
     }
+
     cout << ")";
     if (this->returnType != nullptr) {
         cout << ": ";
         this->returnType->print();
     }
     this->fbody->print();
+    cout << endl;
 }
 
 int FunctionDeclaration::eval() {
@@ -66,28 +66,24 @@ int FunctionDeclaration::eval() {
     return 0;
 }
 
-
-
 // PropertyDeclaration
 PropertyDeclaration::PropertyDeclaration(string ptype, VariableDeclaration* var, Expression* expr)
     : ptype(ptype), variable(var), expression(expr) {
 }
-
 PropertyDeclaration::~PropertyDeclaration() {
     delete variable;
     delete expression;
 }
-
 void PropertyDeclaration::print() {
-    cout << ptype << " ";
+    cout << ptype << " "; // con un tab de espacio
     variable->print();
     if (expression != nullptr) {
         cout << " = ";
         expression->print();
     }
-    cout << ";" << endl;
+    // cout << ";" << endl; (opcional)
+    cout<<endl;
 }
-
 int PropertyDeclaration::eval() {
     // Implementación de evaluación
     return 0;
@@ -105,23 +101,18 @@ void Parameter::print() {
 }
 
 // FunctionValueParameter
-FunctionValueParameter::FunctionValueParameter(Parameter* param, Expression* defaultValue)
-    : parameter(param), defaultValue(defaultValue) {
+FunctionValueParameter::FunctionValueParameter(Parameter* param)
+    : parameter(param) {
 }
 
 FunctionValueParameter::~FunctionValueParameter() {
     delete parameter;
-    delete defaultValue;
 }
 
 
 
 void FunctionValueParameter::print() {
     parameter->print();
-    if (defaultValue != nullptr) {
-        cout << " = ";
-        defaultValue->print();
-    }
 }
 
 // VariableDeclaration
@@ -173,7 +164,7 @@ void Block::print() {
     if (slist != nullptr) {
         slist->print();
     }
-    cout << "}" << endl;
+    cout << "} ";
 }
 
 // Statements
@@ -200,7 +191,7 @@ AssignmentStatement::~AssignmentStatement() {
 }
 
 void AssignmentStatement::print() {
-    cout << identifier << " = ";
+    cout <<identifier << " = ";
     expression->print();
     cout << ";" << endl;
 }
@@ -231,7 +222,7 @@ ExpressionStatement::ExpressionStatement(Expression* expr) : expression(expr) {}
 
 void ExpressionStatement::print() {
     expression->print();
-    cout << ";" << endl;
+    cout<<endl;
 }
 
 ExpressionStatement::~ExpressionStatement() {
@@ -239,7 +230,8 @@ ExpressionStatement::~ExpressionStatement() {
 }
 
 int ExpressionStatement::eval() {
-    return expression->eval();
+    //return expression->eval();
+    return 0;
 }
 
 ForStatement::ForStatement(VariableDeclaration* var, Expression* expr, Block* fbody)
@@ -370,7 +362,6 @@ void IfExpression::print() {
         cout << "else";
         elseBody->print();
     }
-    cout << endl;
 }
 
 int IfExpression::eval() {
@@ -382,6 +373,21 @@ void IfExpression::accept(Visitor* visitor) {
     visitor->visit(this);
 }
 */
+
+// JumpExpression
+JumpExpression::JumpExpression(Expression* ret): returnExpression(ret) {}
+JumpExpression::~JumpExpression() {
+    delete returnExpression;
+}
+void JumpExpression::print() {
+    cout << "return ";
+    returnExpression->print();
+}
+
+int JumpExpression::eval() {
+    // Implementación de evaluación
+    return 0;
+}
 
 // StringLiteral
 StringLiteral::StringLiteral(string value) : value(value) {}

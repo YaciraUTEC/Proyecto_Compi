@@ -30,7 +30,7 @@ std::ostream& operator << ( std::ostream& outs, const Token & tok ) {
         case Token::IF: outs << "TOKEN(IF)"; break;
         case Token::ELSE: outs << "TOKEN(ELSE)"; break;
         case Token::IN: outs << "TOKEN(IN)"; break;
-        case Token::PRINT: outs << "TOKEN(PRINT)"; break;
+        case Token::PRINT: outs << "TOKEN(PRINTLN)"; break;
         case Token::PLUS: outs << "TOKEN(PLUS)"; break;
         case Token::MINUS: outs << "TOKEN(MINUS)"; break;
         case Token::MUL: outs << "TOKEN(MUL)"; break;
@@ -49,6 +49,9 @@ std::ostream& operator << ( std::ostream& outs, const Token & tok ) {
         case Token::VAR: outs << "TOKEN(VAR)"; break;
         case Token::VAL: outs << "TOKEN(VAL)"; break;
         case Token::END: outs << "TOKEN(END)"; break;
+        case Token::STRING: outs << "TOKEN(STRING)"; break;
+        case Token::INT: outs << "TOKEN(INT)"; break;
+        case Token::BOOLEAN: outs << "TOKEN(BOOLEAN)"; break;
         case Token::ERROR: outs << "TOKEN(ERROR)"; break;
         default: outs << "TOKEN(UNKNOWN)"; break;
     }

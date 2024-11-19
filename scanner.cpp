@@ -41,6 +41,9 @@ Token* Scanner::nextToken() {
         else if (word == "val") token = new Token(Token::VAL, word, 0, word.length());
         else if (word == "true") token = new Token(Token::TRUE, word, 0, word.length());
         else if (word == "false") token = new Token(Token::FALSE, word, 0, word.length());
+        else if (word == "Int") token = new Token(Token::INT, word, 0, word.length());
+        else if (word == "Boolean") token = new Token(Token::BOOLEAN, word, 0, word.length());
+        else if (word == "String") token = new Token(Token::STRING, word, 0, word.length());
         else token = new Token(Token::IDENTIFIER, word, 0, word.length());
     }
     else if (strchr("+-*/(){}=,;:<>.|&", c)) {

@@ -94,14 +94,27 @@ FunctionDeclaration* Parser::parseFunctionDeclaration() {
 
     list<FunctionValueParameter*> parameters;
     while (!check(Token::Type::RIGHT_PAREN)) {
-        Parameter* param = new Parameter(parseVariableDeclaration()->identifier, parseVariableDeclaration()->type);
-        Expression* defaultValue = nullptr;
+        if (!match(Token::Type::IDENTIFIER)) {
+            cout << "Error: Se esperaba un identificador de parámetro de función" << endl;
+            exit(1);
+        }
+        string id = previous->text;
 
-        if (match(Token::Type::ASSIGN)) {
-            defaultValue = parseExpression();
+        if (!match(Token::Type::COLON)) {
+            cout << "Error: Se esperaba ':' después del identificador del parámetro de función" << endl;
+            exit(1);
         }
 
-        parameters.push_back(new FunctionValueParameter(param, defaultValue));
+        if (!match(Token::Type::INT) && !match(Token::Type::BOOLEAN) && !match(Token::Type::STRING)) {
+            cout << "Error: Se esperaba un tipo después de ':'" << endl;
+            exit(1);
+        }
+
+        Type* type = new Type(previous->text);
+
+        Parameter* param = new Parameter(id, type);
+
+        parameters.push_back(new FunctionValueParameter(param));
 
         if (!match(Token::Type::COMMA) && !check(Token::Type::RIGHT_PAREN)) {
             cout << "Error: Se esperaba una ',' después de un parámetro de función" << endl;
@@ -113,7 +126,7 @@ FunctionDeclaration* Parser::parseFunctionDeclaration() {
 
     Type* returnType = nullptr;
     if (match(Token::Type::COLON)) {
-        if (!match(Token::Type::IDENTIFIER)) {
+        if (!match(Token::Type::INT) && !match(Token::Type::BOOLEAN) && !match(Token::Type::STRING)) {
             cout << "Error: Se esperaba un tipo de retorno después de ':'" << endl;
             exit(1);
         }
@@ -151,7 +164,7 @@ VariableDeclaration* Parser::parseVariableDeclaration() {
         exit(1);
     }
 
-    if (!match(Token::Type::IDENTIFIER)) {
+    if (!match(Token::Type::INT) && !match(Token::Type::BOOLEAN) && !match(Token::Type::STRING)) {
         cout << "Error: Se esperaba un tipo después de ':'" << endl;
         exit(1);
     }
@@ -212,6 +225,9 @@ Statement* Parser::parseStatement() {
     else if (match(Token::Type::IF)) {
         return new ExpressionStatement(parseIfExpression());
     }
+    else if(match(Token::Type::RETURN)){
+        return new ExpressionStatement(parseJumpExpression());
+    }
     else if (match(Token::Type::WHILE)) {
         if (!match(Token::Type::LEFT_PAREN)) {
             cout << "Error: Se esperaba un '(' después del while" << endl;
@@ -244,7 +260,13 @@ Statement* Parser::parseStatement() {
         string id = previous->text;
         if (match(Token::Type::ASSIGN)) {
             Expression* expr = parseExpression();
-            return new AssignmentStatement(id, expr);
+            if(match(Token::Type::PCOMMA)){
+                return new AssignmentStatement(id, expr); // Si encuentra bien
+            }
+            else{
+                return new AssignmentStatement(id, expr); // Si no, también xd
+            }
+
         }
     }else if (match(Token::Type::PRINT)) {
         if (!match(Token::Type::LEFT_PAREN)) {
@@ -369,6 +391,8 @@ Expression* Parser::parsePrimaryExpression() {
             throw std::runtime_error("Expected ')' after expression");
         }
         return expr;
+    }else if (match(Token::Type::STRING)) {
+        return new LiteralExpression(STRING_LITERAL, previous->text);
     }
     cout << "Error: Se esperaba un número, un identificador o un paréntesis, pero se encontró: " << *current << endl;
     exit(0);
@@ -384,4 +408,13 @@ Expression* Parser::parseIfExpression() {
     }
 
     return new IfExpression(condition, ifBody, elseBody);
+}
+
+Expression* Parser::parseJumpExpression(){
+    Expression* e = parseExpression();
+    if(e){
+        return new JumpExpression(e);
+    }else{
+        return new JumpExpression(nullptr);
+    }
 }

@@ -3,11 +3,10 @@
 // kotlinFile ::= {declaration [';']}
 // declaration ::= functionDeclaration | propertyDeclaration
 // propertyDeclaration ::= ('val' | 'var') variableDeclaration ['=' expression] [';']
-// functionDeclaration ::= 'fun' Identifier functionValueParameters [':' type] functionBody
+// functionDeclaration ::= 'fun' Identifier functionValueParameters [':' type] block
 // functionValueParameters ::= '(' [functionValueParameter {',' functionValueParameter}] ')'
-// functionValueParameter ::= parameter ['=' expression]
+// functionValueParameter ::= parameter
 // parameter ::= Identifier ':' type
-// functionBody ::= block | ('=' expression)
 // block ::= '{' statements '}'
 // statements ::= [statement {';' statement}] [';']
 // statement ::= (declaration | assignment | forStatement | whileStatement | expression | printlnStatement)
@@ -25,7 +24,8 @@
 // rangeExpression ::= additiveExpression {('..' | '..<') additiveExpression}
 // additiveExpression ::= multiplicativeExpression {('+' | '-') multiplicativeExpression}
 // multiplicativeExpression ::= primaryExpression {('*' | '/') primaryExpression}
-// primaryExpression ::= Identifier | '(' expression ')' | stringLiteral | ifExpression | literalConstant
+// primaryExpression ::= Identifier | '(' expression ')' | jumpExpression | stringLiteral | ifExpression | literalConstant
+// jumpExpression ::= 'return' expression
 // ifExpression ::= '(' expression ')' (block | ([block] [';'] 'else' (block | ';')) | ';')
 // literalConstant ::= BooleanLiteral | IntegerLiteral | CharacterLiteral
 // Identifier ::= (Letter | '_ ') {Letter | '_' | UnicodeDigit} | '´' QuotedSymbol {QuotedSymbol} '`'
