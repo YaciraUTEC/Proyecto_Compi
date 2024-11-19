@@ -13,6 +13,11 @@ void IfExpression::accept2(ImpValueVisitor* v) {
     return v->visit(this);
 }
 
+ImpValue IfExpression::accept(ImpValueVisitor* v) {
+    ImpValue z;
+    return z;
+}
+
 ImpValue StringLiteral::accept(ImpValueVisitor* v) {
     return v->visit(this);
 }
@@ -59,6 +64,10 @@ void FunctionDeclaration::accept(ImpValueVisitor* v) {
     return v->visit(this);
 }
 
+void PropertyDeclaration::accept(ImpValueVisitor* v) {
+    return v->visit(this);
+}
+
 void Block::accept(ImpValueVisitor* v) {
     return v->visit(this);
 }
@@ -93,6 +102,11 @@ void ImpInterpreter::visit(KotlinFile* kf) {
     */
 }
 
+void ImpInterpreter::visit(Declaration* d) {
+    d->accept(this);
+    return;
+}
+
 void ImpInterpreter::visit(Block* b) {
     env.add_level();
     b->slist->accept(this);
@@ -113,17 +127,21 @@ void ImpInterpreter::visit(FunctionDeclaration* fd) {
     return;
 }
 
-/*
+void ImpInterpreter::visit(PropertyDeclaration* p) {
+    ImpValue v = p->expression->accept(this);
+    env.add_var(p->variable->identifier, v);
+    return;
+}
+
 void ImpInterpreter::visit(StatementList* s) {
-    list<Stm*>::iterator it;
-    for (it = s->stms.begin(); it != s->stms.end(); ++it) {
+    list<Statement*>::iterator it;
+    for (it = s->statements.begin(); it != s->statements.end(); ++it) {
         (*it)->accept(this);
         if (retcall)
             break;
     }
     return;
 }
-*/
 
 void ImpInterpreter::visit(AssignmentStatement* s) {
     ImpValue v = s->expression->accept(this);
@@ -197,6 +215,16 @@ void ImpInterpreter::visit(ForStatement* s) {
     }
     return;
     */
+}
+
+void ImpInterpreter::visit(DeclarationStatement* s) {
+    s->declaration->accept(this);
+    return;
+}
+
+void ImpInterpreter::visit(ExpressionStatement* s) {
+    s->expression->accept(this);
+    return;
 }
 
 ImpValue ImpInterpreter::visit(BinaryExpression* e) {
@@ -276,12 +304,13 @@ ImpValue ImpInterpreter::visit(BinaryExpression* e) {
 }
 
 ImpValue ImpInterpreter::visit(LiteralExpression* e) {
-    /*
+
     ImpValue v;
+    /*
     v.set_default_value(TINT);
     v.int_value = e->value;
+     */
     return v;
-    */
 }
 
 /*
@@ -300,6 +329,15 @@ ImpValue ImpInterpreter::visit(IdentifierExpression* e) {
         cout << "Variable indefinida: " << e->identifier << endl;
         exit(0);
     }
+}
+
+ImpValue ImpInterpreter::visit(StringLiteral* e) {
+    ImpValue v;
+    /*
+    v.set_default_value(TSTRING);
+    v.string_value = e->value;
+     */
+    return v;
 }
 
 /*

@@ -110,7 +110,7 @@ FunctionDeclaration* Parser::parseFunctionDeclaration() {
             exit(1);
         }
 
-        Type* type = new Type(previous->text);
+        string type = previous->text;
 
         Parameter* param = new Parameter(id, type);
 
@@ -124,13 +124,13 @@ FunctionDeclaration* Parser::parseFunctionDeclaration() {
 
     match(Token::Type::RIGHT_PAREN); // Consume ')'
 
-    Type* returnType = nullptr;
+    string returnType = "";
     if (match(Token::Type::COLON)) {
         if (!match(Token::Type::INT) && !match(Token::Type::BOOLEAN) && !match(Token::Type::STRING)) {
             cout << "Error: Se esperaba un tipo de retorno después de ':'" << endl;
             exit(1);
         }
-        returnType = new Type(previous->text);
+        returnType = previous->text;
     }
 
     Block* fbody = parseBlock();
@@ -169,7 +169,7 @@ VariableDeclaration* Parser::parseVariableDeclaration() {
         exit(1);
     }
 
-    Type* type = new Type(previous->text);
+    string type = previous->text;
 
     return new VariableDeclaration(id, type);
 }

@@ -6,13 +6,6 @@ Declaration::~Declaration() {}
 Expression::~Expression() {}
 Statement::~Statement() {}
 
-// Type
-Type::Type(string name) : name(name) {}
-Type::~Type() {}
-void Type::print() {
-    cout << name << " ";
-}
-
 // KotlinFile
 KotlinFile::KotlinFile() {}
 void KotlinFile::add(Declaration* declaration) {
@@ -27,11 +20,10 @@ void KotlinFile::print() {
 
 // FunctionDeclaration
 FunctionDeclaration::FunctionDeclaration(string id, list<FunctionValueParameter*> params,
-    Type* rtype, Block* body)
+    string rtype, Block* body)
     : identifier(id), parameters(params), returnType(rtype), fbody(body) {
 }
 FunctionDeclaration::~FunctionDeclaration() {
-    delete returnType;
     delete fbody;
     for (auto param : parameters) {
         delete param;
@@ -46,11 +38,10 @@ void FunctionDeclaration::print() {
             cout << ", ";
         }
     }
-
     cout << ")";
-    if (this->returnType != nullptr) {
+    if (this->returnType != "") {
         cout << ": ";
-        this->returnType->print();
+        cout<<returnType;
     }
     this->fbody->print();
     cout << endl;
@@ -76,14 +67,12 @@ void PropertyDeclaration::print() {
 }
 
 // Parameter
-Parameter::Parameter(string id, Type* type) : identifier(id), type(type) {}
-Parameter::~Parameter() {
-    delete type;
-}
+Parameter::Parameter(string id, string type) : identifier(id), type(type) {}
+Parameter::~Parameter() {}
 
 void Parameter::print() {
     cout << identifier << ": ";
-    type->print();
+    cout << type;
 }
 
 // FunctionValueParameter
@@ -102,16 +91,14 @@ void FunctionValueParameter::print() {
 }
 
 // VariableDeclaration
-VariableDeclaration::VariableDeclaration(string id, Type* type)
+VariableDeclaration::VariableDeclaration(string id, string type)
     : identifier(id), type(type) {
 }
-VariableDeclaration::~VariableDeclaration() {
-    delete type;
-}
+VariableDeclaration::~VariableDeclaration() {}
 
 void VariableDeclaration::print() {
     cout << identifier << ": ";
-    type->print();
+    cout << type;
 }
 
 // Statementlist

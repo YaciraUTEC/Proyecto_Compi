@@ -28,15 +28,7 @@ class Block;
 class VariableDeclaration;
 class StatementList;
 
-class Type {
-public:
-    string name;
-    Type(string name);
-    ~Type();
-    void print();
-};
-
-// KOTLINFILE
+// KOTLINFIL
 class KotlinFile {
 public:
     list<Declaration*> decl;
@@ -62,12 +54,12 @@ class FunctionDeclaration : public Declaration {
 public:
     string identifier;
     list<FunctionValueParameter*> parameters;
-    Type* returnType;
+    string returnType;
     Block* fbody;
     // -------------------------------------------------------
     void accept(ImpValueVisitor* v);
     // -------------------------------------------------------
-    FunctionDeclaration(string id, list<FunctionValueParameter*> params, Type* rtype, Block* fbody);
+    FunctionDeclaration(string id, list<FunctionValueParameter*> params, string rtype, Block* fbody);
     ~FunctionDeclaration();
     void print();
 };
@@ -89,11 +81,11 @@ public:
 class Parameter {
 public:
     string identifier;
-    Type* type;
+    string type;
     // -------------------------------------------------------
     void accept(ImpValueVisitor* v);
     // -------------------------------------------------------
-    Parameter(string id, Type* type);
+    Parameter(string id, string type);
     ~Parameter();
     void print();
 };
@@ -136,11 +128,11 @@ public:
 class VariableDeclaration {
 public:
     string identifier;
-    Type* type;
+    string type;
     // -------------------------------------------------------
     void accept(ImpValueVisitor* v);
     // -------------------------------------------------------
-    VariableDeclaration(string id, Type* type);
+    VariableDeclaration(string id, string type);
     ~VariableDeclaration();
     void print();
 };
@@ -210,7 +202,7 @@ public:
     Expression* expression;
     ExpressionStatement(Expression* expr);
     // -------------------------------------------------------
-    void accept(ImpValueVisitor* v) = 0;
+    void accept(ImpValueVisitor* v);
     // -------------------------------------------------------
     ~ExpressionStatement();
     void print();
