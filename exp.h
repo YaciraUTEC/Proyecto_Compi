@@ -7,7 +7,17 @@
 #include "visitor.h"
 #include <iostream>
 
+#pragma region Interprete_imports
+#include "interprete/imp_value.hh"
+#include "interprete/imp_type.hh"
+#pragma endregion Interprete_imports
+
+
 using namespace std;
+
+#pragma region Interprete_def
+class ImpValueVisitor;
+#pragma endregion Interprete_def
 
 class FunctionDeclaration;
 class Expression;
@@ -21,11 +31,9 @@ class StatementList;
 class Type {
 public:
     string name;
-    // void accept(Visitor* visitor);
     Type(string name);
     ~Type();
     void print();
-    int eval();
 };
 
 // KOTLINFILE
@@ -35,14 +43,18 @@ public:
     KotlinFile();
     void add(Declaration* decl);
     void print();
-    // int eval();
+    // -------------------------------------------------------
+    void accept(ImpValueVisitor* kf);
+    // -------------------------------------------------------
 };
 
 // DECLARATIONS
 class Declaration {
 public:
     virtual void print() = 0;
-    virtual int eval() = 0;
+    // -------------------------------------------------------
+    virtual void accept(ImpValueVisitor* v) = 0;
+    // -------------------------------------------------------
     virtual ~Declaration() = 0;
 };
 
@@ -52,11 +64,12 @@ public:
     list<FunctionValueParameter*> parameters;
     Type* returnType;
     Block* fbody;
-
+    // -------------------------------------------------------
+    void accept(ImpValueVisitor* v);
+    // -------------------------------------------------------
     FunctionDeclaration(string id, list<FunctionValueParameter*> params, Type* rtype, Block* fbody);
     ~FunctionDeclaration();
     void print();
-    int eval();
 };
 
 class PropertyDeclaration : public Declaration {
@@ -64,11 +77,12 @@ public:
     string ptype; // var o val
     VariableDeclaration* variable;
     Expression* expression;
-
+    // -------------------------------------------------------
+    void accept(ImpValueVisitor* v);
+    // -------------------------------------------------------
     PropertyDeclaration(string ptype, VariableDeclaration* var, Expression* expr);
     ~PropertyDeclaration();
     void print();
-    int eval();
 };
 
 // PARAMETER
@@ -76,43 +90,46 @@ class Parameter {
 public:
     string identifier;
     Type* type;
-
+    // -------------------------------------------------------
+    void accept(ImpValueVisitor* v);
+    // -------------------------------------------------------
     Parameter(string id, Type* type);
     ~Parameter();
     void print();
-    int eval();
 };
 
 class FunctionValueParameter {
 public:
     Parameter* parameter;
+    // -------------------------------------------------------
+    void accept(ImpValueVisitor* v);
+    // -------------------------------------------------------
     FunctionValueParameter(Parameter* param);
     ~FunctionValueParameter();
     void print();
-    int eval();
 };
 
 // BLOCK
 class Block { // esto es un statementlist
 public:
     StatementList* slist;
-
+    // -------------------------------------------------------
+    void accept(ImpValueVisitor* v);
+    // -------------------------------------------------------
     Block(StatementList* stms);
-    // void accept(Visitor* visitor);
     void print();
-    int eval();
     ~Block();
 };
 
 class StatementList {
 public:
     list<Statement*> statements;
-
     StatementList();
     void add(Statement* stmt);
-    // void accept(Visitor* visitor);
+    // -------------------------------------------------------
+    void accept(ImpValueVisitor* v);
+    // -------------------------------------------------------
     void print();
-    int eval();
     ~StatementList();
 };
 
@@ -120,11 +137,12 @@ class VariableDeclaration {
 public:
     string identifier;
     Type* type;
-
+    // -------------------------------------------------------
+    void accept(ImpValueVisitor* v);
+    // -------------------------------------------------------
     VariableDeclaration(string id, Type* type);
     ~VariableDeclaration();
     void print();
-    int eval();
 };
 
 // ================================================================================================= //
@@ -132,33 +150,34 @@ public:
 // STATEMENTS
 class Statement {
 public:
-    // virtual // void accept(Visitor* visitor) = 0;
+    // -------------------------------------------------------
+    virtual void accept(ImpValueVisitor* v) = 0;
+    // -------------------------------------------------------
     virtual ~Statement() = 0;
     virtual void print() = 0;
-    virtual int eval() = 0;
 };
 
 class DeclarationStatement : public Statement {
 public:
     Declaration* declaration;
-
     DeclarationStatement(Declaration* decl);
-    // // void accept(Visitor* visitor);
+    // -------------------------------------------------------
+    void accept(ImpValueVisitor* v);
+    // -------------------------------------------------------
     ~DeclarationStatement();
     void print();
-    int eval();
 };
 
 class AssignmentStatement : public Statement {
 public:
     string identifier;
     Expression* expression;
-
     AssignmentStatement(string id, Expression* expr);
-    //// void accept(Visitor* visitor);
+    // -------------------------------------------------------
+    void accept(ImpValueVisitor* v);
+    // -------------------------------------------------------
     ~AssignmentStatement();
     void print();
-    int eval();
 };
 
 class ForStatement : public Statement {
@@ -166,46 +185,46 @@ public:
     VariableDeclaration* variable;
     Expression* expression;
     Block* fbody;
-
     ForStatement(VariableDeclaration* var, Expression* expr, Block* fbody);
-    //// void accept(Visitor* visitor);
+    // -------------------------------------------------------
+    void accept(ImpValueVisitor* v);
+    // -------------------------------------------------------
     ~ForStatement();
     void print();
-    int eval();
 };
 
 class WhileStatement : public Statement {
 public:
     Expression* condition;
     Block* wbody;
-
     WhileStatement(Expression* cond, Block* wbody);
-    //// void accept(Visitor* visitor);
+    // -------------------------------------------------------
+    void accept(ImpValueVisitor* v);
+    // -------------------------------------------------------
     ~WhileStatement();
     void print();
-    int eval();
 };
 
 class ExpressionStatement : public Statement {
 public:
     Expression* expression;
-
     ExpressionStatement(Expression* expr);
-    // // void accept(Visitor* visitor);
+    // -------------------------------------------------------
+    void accept(ImpValueVisitor* v) = 0;
+    // -------------------------------------------------------
     ~ExpressionStatement();
     void print();
-    int eval();
 };
 
 class PrintlnStatement : public Statement {
 public:
     Expression* expression;
-
     PrintlnStatement(Expression* expr);
-    // // void accept(Visitor* visitor);
+    // -------------------------------------------------------
+    void accept(ImpValueVisitor* v);
+    // -------------------------------------------------------
     ~PrintlnStatement();
     void print();
-    int eval();
 };
 
 // ================================================================================================= //
@@ -229,10 +248,11 @@ enum BinaryOp {
 // EXPRESSIONS
 class Expression {
 public:
-    // virtual void accept(Visitor* visitor) = 0;
+    // -------------------------------------------------------
+    virtual ImpValue accept(ImpValueVisitor* v) = 0;
+    // -------------------------------------------------------
     virtual ~Expression() = 0;
     virtual void print() = 0;
-    virtual int eval() = 0;
     static string binopToChar(BinaryOp op);
 };
 
@@ -241,23 +261,23 @@ public:
     Expression* left;
     Expression* right;
     BinaryOp op;
-
     BinaryExpression(Expression* lhs, Expression* rhs, BinaryOp op);
-    // void accept(Visitor* visitor);
+    // -------------------------------------------------------
+    ImpValue accept(ImpValueVisitor* v);
+    // -------------------------------------------------------
     ~BinaryExpression();
     void print();
-    int eval();
 };
 
 class IdentifierExpression : public Expression {
 public:
     string identifier;
-
     IdentifierExpression(string id);
-    // void accept(Visitor* visitor);
+    // -------------------------------------------------------
+    ImpValue accept(ImpValueVisitor* v);
+    // -------------------------------------------------------
     ~IdentifierExpression();
     void print();
-    int eval();
 };
 
 class IfExpression : public Expression {
@@ -265,22 +285,24 @@ public:
     Expression* condition;
     Block* thenBody;
     Block* elseBody;
-
     IfExpression(Expression* cond, Block* thenBody, Block* elseBody);
-    // void accept(Visitor* visitor);
+    // -------------------------------------------------------
+    void accept2(ImpValueVisitor* v);
+    ImpValue accept(ImpValueVisitor* v);
+    // -------------------------------------------------------
     ~IfExpression();
     void print();
-    int eval();
 };
 
 class JumpExpression : public Expression {
 public:
     Expression* returnExpression;
     JumpExpression(Expression* ret);
-    // void accept(Visitor* visitor);
+    // -------------------------------------------------------
+    ImpValue accept(ImpValueVisitor* v);
+    // -------------------------------------------------------
     ~JumpExpression();
     void print();
-    int eval();
 };
 
 enum LiteralType { BOOLEAN_LITERAL, INTEGER_LITERAL, CHARACTER_LITERAL, STRING_LITERAL };
@@ -289,23 +311,23 @@ class LiteralExpression : public Expression {
 public:
     LiteralType type;
     string value;
-
     LiteralExpression(LiteralType type, string value);
-    // void accept(Visitor* visitor);
+    // -------------------------------------------------------
+    ImpValue accept(ImpValueVisitor* v);
+    // -------------------------------------------------------
     ~LiteralExpression();
     void print();
-    int eval();
 };
 
 class StringLiteral : public Expression {
 public:
     string value;
-
     StringLiteral(string value);
-    // void accept(Visitor* visitor);
+    // -------------------------------------------------------
+    ImpValue accept(ImpValueVisitor* v);
+    // -------------------------------------------------------
     ~StringLiteral();
     void print();
-    int eval();
 };
 
 #endif // EXP_H

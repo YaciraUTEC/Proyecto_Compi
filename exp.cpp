@@ -12,11 +12,6 @@ Type::~Type() {}
 void Type::print() {
     cout << name << " ";
 }
-/*
-void Type::accept(Visitor* visitor) {
-    visitor->visit(this);
-}
-*/
 
 // KotlinFile
 KotlinFile::KotlinFile() {}
@@ -61,11 +56,6 @@ void FunctionDeclaration::print() {
     cout << endl;
 }
 
-int FunctionDeclaration::eval() {
-    // Implementación de evaluación
-    return 0;
-}
-
 // PropertyDeclaration
 PropertyDeclaration::PropertyDeclaration(string ptype, VariableDeclaration* var, Expression* expr)
     : ptype(ptype), variable(var), expression(expr) {
@@ -83,10 +73,6 @@ void PropertyDeclaration::print() {
     }
     // cout << ";" << endl; (opcional)
     cout<<endl;
-}
-int PropertyDeclaration::eval() {
-    // Implementación de evaluación
-    return 0;
 }
 
 // Parameter
@@ -153,12 +139,6 @@ Block::~Block() {
     delete slist;
 }
 
-/*
-void Block::accept(Visitor* visitor) {
-    visitor->visit(this);
-}
-*/
-
 void Block::print() {
     cout << "{" << endl;
     if (slist != nullptr) {
@@ -178,10 +158,6 @@ void DeclarationStatement::print() {
     declaration->print();
 }
 
-int DeclarationStatement::eval() {
-    return declaration->eval();
-}
-
 AssignmentStatement::AssignmentStatement(string id, Expression* expr)
     : identifier(id), expression(expr) {
 }
@@ -196,11 +172,6 @@ void AssignmentStatement::print() {
     cout << ";" << endl;
 }
 
-int AssignmentStatement::eval() {
-    // Implementación de evaluación
-    return 0;
-}
-
 PrintlnStatement::PrintlnStatement(Expression* expr) : expression(expr) {}
 
 PrintlnStatement::~PrintlnStatement() {
@@ -213,11 +184,6 @@ void PrintlnStatement::print() {
     cout << ")" << endl;
 }
 
-int PrintlnStatement::eval() {
-    // Implementación de evaluación
-    return 0;
-}
-
 ExpressionStatement::ExpressionStatement(Expression* expr) : expression(expr) {}
 
 void ExpressionStatement::print() {
@@ -227,11 +193,6 @@ void ExpressionStatement::print() {
 
 ExpressionStatement::~ExpressionStatement() {
     delete expression;
-}
-
-int ExpressionStatement::eval() {
-    //return expression->eval();
-    return 0;
 }
 
 ForStatement::ForStatement(VariableDeclaration* var, Expression* expr, Block* fbody)
@@ -253,11 +214,6 @@ void ForStatement::print() {
     this->fbody->print();
 }
 
-int ForStatement::eval() {
-    // Implementación de evaluación
-    return 0;
-}
-
 WhileStatement::WhileStatement(Expression* cond, Block* wbody)
     : condition(cond), wbody(wbody) {
 }
@@ -274,11 +230,6 @@ void WhileStatement::print() {
     wbody->print();
 }
 
-int WhileStatement::eval() {
-    // Implementación de evaluación
-    return 0;
-}
-
 // Expressions
 BinaryExpression::BinaryExpression(Expression* lhs, Expression* rhs, BinaryOp op)
     : left(lhs), right(rhs), op(op) {
@@ -288,11 +239,6 @@ BinaryExpression::~BinaryExpression() {
     delete left;
     delete right;
 }
-/*
-void BinaryExpression::accept(Visitor* visitor) {
-    visitor->visit(this);
-}
-*/
 
 IdentifierExpression::IdentifierExpression(string id) : identifier(id) {}
 
@@ -301,16 +247,6 @@ IdentifierExpression::~IdentifierExpression() {}
 void IdentifierExpression::print() {
     cout << identifier;
 }
-
-int IdentifierExpression::eval() {
-    return 0; // falta
-}
-
-/*
-void IdentifierExpression::accept(Visitor* visitor) {
-    visitor->visit(this);
-}
-*/
 
 // LiteralExpression
 LiteralExpression::LiteralExpression(LiteralType type, string value)
@@ -323,7 +259,7 @@ LiteralExpression::~LiteralExpression() {}
 void LiteralExpression::print() {
     cout << value;
 }
-
+/* -----------------------Puede servir--------------------------
 int LiteralExpression::eval() {
     int result;
     switch (type) {
@@ -334,11 +270,6 @@ int LiteralExpression::eval() {
     default: result = 0;
     }
     return result;
-}
-
-/*
-void LiteralExpression::accept(Visitor* visitor) {
-    visitor->visit(this);
 }
 */
 
@@ -364,16 +295,6 @@ void IfExpression::print() {
     }
 }
 
-int IfExpression::eval() {
-    // Implementación de evaluación
-    return 0;
-}
-/*
-void IfExpression::accept(Visitor* visitor) {
-    visitor->visit(this);
-}
-*/
-
 // JumpExpression
 JumpExpression::JumpExpression(Expression* ret): returnExpression(ret) {}
 JumpExpression::~JumpExpression() {
@@ -382,11 +303,6 @@ JumpExpression::~JumpExpression() {
 void JumpExpression::print() {
     cout << "return ";
     returnExpression->print();
-}
-
-int JumpExpression::eval() {
-    // Implementación de evaluación
-    return 0;
 }
 
 // StringLiteral
@@ -398,20 +314,12 @@ void StringLiteral::print() {
     cout << value;
 }
 
-int StringLiteral::eval() {
-    return 0; // falta
-}
-
-// void StringLiteral::accept(Visitor* visitor) {
-//     visitor->visit(this);
-// }
-
 void BinaryExpression::print() {
     left->print();
     cout << " " << binopToChar(op) << " ";
     right->print();
 };
-
+/* -----------------------Puede servir--------------------------
 int BinaryExpression::eval() {
     int result;
     int v1 = left->eval();
@@ -436,8 +344,7 @@ int BinaryExpression::eval() {
     }
     return result;
 };
-
-
+*/
 
 string Expression::binopToChar(BinaryOp op) {
     string  c;
