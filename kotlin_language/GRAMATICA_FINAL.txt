@@ -19,13 +19,13 @@
 // disjunction ::= conjunction {'||' conjunction}
 // conjunction ::= equality {'&&' equality}
 // equality ::= comparison {('!=' | '==') comparison}
-// comparison ::= genericCallLikeComparison {('<' | '>' | '<=' | '>=') genericCallLikeComparison}
-// genericCallLikeComparison ::= rangeExpression
+// comparison ::= rangeExpression {('<' | '>' | '<=' | '>=') rangeExpression}
 // rangeExpression ::= additiveExpression {('..' | '..<') additiveExpression}
 // additiveExpression ::= multiplicativeExpression {('+' | '-') multiplicativeExpression}
-// multiplicativeExpression ::= primaryExpression {('*' | '/') primaryExpression}
-// primaryExpression ::= Identifier | '(' expression ')' | jumpExpression | stringLiteral | ifExpression | literalConstant
+// multiplicativeExpression ::= postfixUnaryExpression {('*' | '/') postfixUnaryExpression}
+// postfixUnaryExpression ::= primaryExpression [ '('  [ expression { ',' expression}]  ')' ]
+// primaryExpression ::= Identifier | '(' expression ')' | jumpExpression | stringLiteral | ifExpression | literalExpression
 // jumpExpression ::= 'return' expression
 // ifExpression ::= '(' expression ')' (block | ([block] [';'] 'else' (block | ';')) | ';')
-// literalConstant ::= BooleanLiteral | IntegerLiteral | CharacterLiteral
+// literalExpression ::= BooleanLiteral | IntegerLiteral | CharacterLiteral
 // Identifier ::= (Letter | '_ ') {Letter | '_' | UnicodeDigit} | '´' QuotedSymbol {QuotedSymbol} '`'

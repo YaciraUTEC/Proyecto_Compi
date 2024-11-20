@@ -272,6 +272,18 @@ public:
     void print();
 };
 
+class FunctionCallExpression : public Expression {
+public:
+    string identifier;
+    list<Expression*> arguments;
+    FunctionCallExpression(string id, list<Expression*> args);
+    // -------------------------------------------------------
+    ImpValue accept(ImpValueVisitor* v);
+    // -------------------------------------------------------
+    ~FunctionCallExpression();
+    void print();
+};
+
 class IfExpression : public Expression {
 public:
     Expression* condition;
@@ -297,7 +309,7 @@ public:
     void print();
 };
 
-enum LiteralType { BOOLEAN_LITERAL, INTEGER_LITERAL, CHARACTER_LITERAL, STRING_LITERAL };
+enum LiteralType { BOOLEAN_LITERAL, INTEGER_LITERAL, CHARACTER_LITERAL};
 
 class LiteralExpression : public Expression {
 public:

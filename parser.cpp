@@ -158,20 +158,21 @@ VariableDeclaration* Parser::parseVariableDeclaration() {
     }
 
     string id = previous->text;
+    VariableDeclaration* var = nullptr;
 
-    if (!match(Token::Type::COLON)) {
-        cout << "Error: Se esperaba ':' después del identificador de variable" << endl;
-        exit(1);
+    if (match(Token::Type::COLON)) {
+        if (!match(Token::Type::INT) && !match(Token::Type::BOOLEAN) && !match(Token::Type::STRING)) {
+            cout << "Error: Se esperaba un tipo después de ':'" << endl;
+            exit(1);
+        }
+
+        string type = previous->text;
+        var = new VariableDeclaration(id, type);
+    }else{
+        var = new VariableDeclaration(id, "");
     }
 
-    if (!match(Token::Type::INT) && !match(Token::Type::BOOLEAN) && !match(Token::Type::STRING)) {
-        cout << "Error: Se esperaba un tipo después de ':'" << endl;
-        exit(1);
-    }
-
-    string type = previous->text;
-
-    return new VariableDeclaration(id, type);
+    return var;
 }
 
 // ================================
@@ -252,6 +253,10 @@ Statement* Parser::parseStatement() {
             exit(1);
         }
         Expression* range = parseExpression();
+        if (!match(Token::Type::RIGHT_PAREN)) {
+            cout << "Error: Se esperaba un ')' después de la expresión del for" << endl;
+            exit(1);
+        }
         Block* body = parseBlock();
         return new ForStatement(var, range, body);
     }
@@ -365,13 +370,34 @@ Expression* Parser::parseAdditiveExpression() {
 }
 
 Expression* Parser::parseMultiplicativeExpression() {
-    Expression* expr = parsePrimaryExpression();
+    Expression* expr = parsePostfixUnaryExpression();
 
     while (match(Token::Type::MUL) || match(Token::Type::DIV)) {
         BinaryOp op = previous->type == Token::Type::MUL ? MUL_OP : DIV_OP;
         expr = new BinaryExpression(expr, parsePrimaryExpression(), op);
     }
 
+    return expr;
+}
+
+Expression* Parser::parsePostfixUnaryExpression() {
+    Expression* expr = parsePrimaryExpression();
+    string fcallname = previous->text;
+    if (match(Token::Type::LEFT_PAREN)) {
+        list<Expression*> arguments;
+        if (!check(Token::Type::RIGHT_PAREN)) {
+            do {
+                arguments.push_back(parseExpression());
+            } while (match(Token::Type::COMMA));
+            if (!match(Token::Type::RIGHT_PAREN)) {
+                cout << "Error: Se esperaba un ')' después de los argumentos de la función" << endl;
+                exit(1);
+            }
+        } else {
+            match(Token::Type::RIGHT_PAREN);
+        }
+        return new FunctionCallExpression(fcallname, arguments);
+    }
     return expr;
 }
 
@@ -392,7 +418,8 @@ Expression* Parser::parsePrimaryExpression() {
         }
         return expr;
     }else if (match(Token::Type::STRING)) {
-        return new LiteralExpression(STRING_LITERAL, previous->text);
+        string str = previous->text;
+        return new StringLiteral(str);
     }
     cout << "Error: Se esperaba un número, un identificador o un paréntesis, pero se encontró: " << *current << endl;
     exit(0);

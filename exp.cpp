@@ -97,8 +97,11 @@ VariableDeclaration::VariableDeclaration(string id, string type)
 VariableDeclaration::~VariableDeclaration() {}
 
 void VariableDeclaration::print() {
-    cout << identifier << ": ";
-    cout << type;
+    cout << identifier;
+    if (type != "") {
+        cout << ": ";
+        cout << type;
+    }
 }
 
 // Statementlist
@@ -156,7 +159,8 @@ AssignmentStatement::~AssignmentStatement() {
 void AssignmentStatement::print() {
     cout <<identifier << " = ";
     expression->print();
-    cout << ";" << endl;
+    // cout << ";" << endl; (opcional)
+    cout<<endl;
 }
 
 PrintlnStatement::PrintlnStatement(Expression* expr) : expression(expr) {}
@@ -199,6 +203,7 @@ void ForStatement::print() {
     this->expression->print();
     cout << ")";
     this->fbody->print();
+    cout<<endl;
 }
 
 WhileStatement::WhileStatement(Expression* cond, Block* wbody)
@@ -215,6 +220,7 @@ void WhileStatement::print() {
     condition->print();
     cout << ")";
     wbody->print();
+    cout<<endl;
 }
 
 // Expressions
@@ -280,6 +286,23 @@ void IfExpression::print() {
         cout << "else";
         elseBody->print();
     }
+}
+
+FunctionCallExpression::FunctionCallExpression(string id, list<Expression *> args) : identifier(id), arguments(args) {}
+FunctionCallExpression::~FunctionCallExpression() {
+    for (auto arg : arguments) {
+        delete arg;
+    }
+}
+void FunctionCallExpression::print() {
+    cout << this->identifier << "(";
+    for (auto arg = arguments.begin(); arg != arguments.end(); arg++) {
+        (*arg)->print();
+        if (next(arg) != arguments.end()) {
+            cout << ", ";
+        }
+    }
+    cout << ")";
 }
 
 // JumpExpression

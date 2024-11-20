@@ -21,10 +21,10 @@ private:
     Expression* parseConjunction();
     Expression* parseEquality();
     Expression* parseComparison();
-    Expression* parseGenericCallLikeComparison();
     Expression* parseRangeExpression();
     Expression* parseAdditiveExpression(); // esto es como un parseexpression
-    Expression* parseMultiplicativeExpression(); // esto es como un parseterm 
+    Expression* parseMultiplicativeExpression(); // esto es como un parseterm
+    Expression* parsePostfixUnaryExpression();
     Expression* parseIfExpression();
     Expression* parseJumpExpression();
     Expression* parsePrimaryExpression(); // esto es como un parsefactor

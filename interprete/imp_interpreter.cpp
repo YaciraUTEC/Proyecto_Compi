@@ -9,6 +9,10 @@ ImpValue IdentifierExpression::accept(ImpValueVisitor* v) {
     return v->visit(this);
 }
 
+ImpValue FunctionCallExpression::accept(ImpValueVisitor* v) {
+    return v->visit(this);
+}
+
 void IfExpression::accept2(ImpValueVisitor* v) {
     return v->visit(this);
 }
