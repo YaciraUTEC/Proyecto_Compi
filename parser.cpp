@@ -105,7 +105,7 @@ FunctionDeclaration* Parser::parseFunctionDeclaration() {
             exit(1);
         }
 
-        if (!match(Token::Type::INT) && !match(Token::Type::BOOLEAN) && !match(Token::Type::STRING)) {
+        if (!match(Token::Type::INT) && !match(Token::Type::LONG) && !match(Token::Type::BOOLEAN) && !match(Token::Type::STRING)) {
             cout << "Error: Se esperaba un tipo después de ':'" << endl;
             exit(1);
         }
@@ -126,7 +126,7 @@ FunctionDeclaration* Parser::parseFunctionDeclaration() {
 
     string returnType = "";
     if (match(Token::Type::COLON)) {
-        if (!match(Token::Type::INT) && !match(Token::Type::BOOLEAN) && !match(Token::Type::STRING)) {
+        if (!match(Token::Type::INT) && !match(Token::Type::LONG) && !match(Token::Type::BOOLEAN) && !match(Token::Type::STRING)) {
             cout << "Error: Se esperaba un tipo de retorno después de ':'" << endl;
             exit(1);
         }
@@ -161,7 +161,7 @@ VariableDeclaration* Parser::parseVariableDeclaration() {
     VariableDeclaration* var = nullptr;
 
     if (match(Token::Type::COLON)) {
-        if (!match(Token::Type::INT) && !match(Token::Type::BOOLEAN) && !match(Token::Type::STRING)) {
+        if (!match(Token::Type::INT) && !match(Token::Type::LONG) && !match(Token::Type::BOOLEAN) && !match(Token::Type::STRING)) {
             cout << "Error: Se esperaba un tipo después de ':'" << endl;
             exit(1);
         }

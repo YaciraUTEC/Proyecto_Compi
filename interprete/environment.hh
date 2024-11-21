@@ -12,7 +12,7 @@ using namespace std;
 
 template <typename T>
 class Environment {
-   private:
+private:
     vector<unordered_map<string, T> > ribs;
     int search_rib(string var) {
         int idx = ribs.size() - 1;
@@ -26,7 +26,7 @@ class Environment {
         return -1;
     }
 
-   public:
+public:
     Environment() {}
     void clear() { ribs.clear(); }
     void add_level() {
@@ -36,7 +36,7 @@ class Environment {
     void add_var(string var, T value) {
         if (ribs.size() == 0) {
             cout << "Environment sin niveles: no se pueden agregar variables"
-                 << endl;
+                << endl;
             exit(0);
         }
         ribs.back()[var] = value;

@@ -1,9 +1,10 @@
 #include "imp_interpreter.hh"
 
+// Funciones accept de las clases del AST
+
 ImpValue BinaryExpression::accept(ImpValueVisitor* v) {
     return v->visit(this);
 }
-
 
 ImpValue IdentifierExpression::accept(ImpValueVisitor* v) {
     return v->visit(this);
@@ -80,6 +81,8 @@ void KotlinFile::accept(ImpValueVisitor* v) {
     return v->visit(this);
 }
 
+// Funciones visit de ImpInterpreter
+
 void ImpInterpreter::interpret(KotlinFile* kf) {
     env.clear();
     kf->accept(this);
@@ -87,6 +90,32 @@ void ImpInterpreter::interpret(KotlinFile* kf) {
 }
 
 void ImpInterpreter::visit(KotlinFile* kf) {
+    
+    // Revisar la implementación de este método
+    env.add_level();
+    fdecs.add_level();
+    
+    for (Declaration* d : kf->decl) {
+        d->accept(this);
+    }
+
+    if (fdecs.check("main")) {
+        FunctionDeclaration* main = fdecs.lookup("main");
+        retcall = false;
+        main->fbody->accept(this);
+    } else {
+        cout << "Error: No se encontro funcion main" << endl;
+        exit(0);
+    }
+
+    if (!retcall) {
+        cout << "Error: Funcion main no ejecuto RETURN" << endl;
+        exit(0);
+    }
+
+    env.remove_level();
+    fdecs.remove_level();
+    
     /*
     env.add_level();
     fdecs.add_level();
@@ -203,6 +232,25 @@ ImpValue ImpInterpreter::visit(JumpExpression* s) {
 }
 
 void ImpInterpreter::visit(ForStatement* s) {
+
+    // Revisar la implementación de este método
+    env.add_level();
+    ImpValue v = s->expression->accept(this);
+
+    if (v.type != TINT) {
+        cout << "Error de tipos:  tienen que ser enteros" << endl;
+        exit(0);
+    }
+
+    ImpValue start = s->expression->accept(this);
+    ImpValue end = s->expression->accept(this);
+
+    while (start.int_value < end.int_value) {
+        s->fbody->accept(this);
+        start.int_value++;
+    }
+
+    return;
     /*
     env.add_level();
     ImpValue start = s->start->accept(this);

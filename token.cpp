@@ -51,6 +51,7 @@ std::ostream& operator << ( std::ostream& outs, const Token & tok ) {
         case Token::END: outs << "TOKEN(END)"; break;
         case Token::STRING: outs << "TOKEN(STRING)"; break;
         case Token::INT: outs << "TOKEN(INT)"; break;
+        case Token::LONG: outs << "TOKEN(LONG)"; break;
         case Token::BOOLEAN: outs << "TOKEN(BOOLEAN)"; break;
         case Token::ERROR: outs << "TOKEN(ERROR)"; break;
         default: outs << "TOKEN(UNKNOWN)"; break;

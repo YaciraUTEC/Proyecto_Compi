@@ -17,7 +17,7 @@ public:
         TRUE,             // true
         FALSE,            // false
         VAR,              // var
-        VAL,              // val (si se utiliza para variables inmutables)
+        VAL,              // val
         END,              // end: fin de un bloque de código        
         IDENTIFIER,       // Identificadores (nombres de variables, funciones, etc.)
         NUMBER,           // Números
@@ -45,6 +45,7 @@ public:
         RANGE_INCL,       // ..
         STRING,           // String
         INT,              // Int
+        LONG,             // Long
         BOOLEAN,          // Boolean
         ERROR,            // Error
     };
