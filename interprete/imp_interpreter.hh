@@ -4,8 +4,8 @@
 #include <unordered_map>
 
 #include "../exp.h"
-#include "imp_value_visitor.hh"
-#include "environment.hh"
+#include "imp_value_visitor.h"
+#include "environment.h"
 
 using namespace std;
 

@@ -1,6 +1,6 @@
 #include "imp_type.hh"
 
-const char* ImpType::type_names[5] = { "notype", "void", "int", "bool", "fun" };
+const char* ImpType::type_names[6] = { "notype", "void", "int", "bool", "fun", "long" };
 
 bool ImpType::match(const ImpType& t) {
   if (this->ttype != t.ttype) return false;
@@ -26,6 +26,7 @@ bool ImpType::set_basic_type(TType tt) {
   switch(tt) {
   case ImpType::INT:
   case ImpType::BOOL:
+  case ImpType::LONG:
   case ImpType::VOID:
     this->ttype = tt; break;
   default:
@@ -42,7 +43,7 @@ bool ImpType::set_fun_type(list<string> slist, string s) {
   for (it = slist.begin(); it != slist.end(); ++it) {
     ImpType type;
     type.set_basic_type(*it);
-    if (type.ttype==ImpType::INT || type.ttype==ImpType::BOOL) 
+    if (type.ttype==ImpType::INT || type.ttype==ImpType::BOOL || type.ttype==ImpType::LONG)
       types.push_back(type.ttype);
     else {     
       types.clear();
@@ -65,6 +66,7 @@ ImpType::TType ImpType::string_to_type(string s) {
   TType tt;
   if (s.compare("int")==0) tt = ImpType::INT;
   else if (s.compare("bool")==0) tt = ImpType::BOOL;
+  else if (s.compare("long")==0) tt = ImpType::LONG;
   else if (s.compare("void")==0) tt = ImpType::VOID;
   else tt = ImpType::NOTYPE; 
   return tt;

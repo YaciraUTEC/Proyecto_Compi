@@ -1,5 +1,4 @@
 #include "exp.h"
-#include "visitor.h"
 
 // Implementaciones base
 Declaration::~Declaration() {}

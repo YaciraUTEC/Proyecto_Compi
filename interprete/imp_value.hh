@@ -9,7 +9,7 @@
 using namespace std;
 
 
-enum ImpVType { NOTYPE=0, TINT, TBOOL, TLONG };
+enum ImpVType { NOTYPE=0, TINT, TBOOL, TLONG};
 
 class ImpValue {
 public:
