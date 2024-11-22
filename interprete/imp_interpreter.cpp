@@ -2,6 +2,7 @@
 
 // Funciones accept de las clases del AST
 
+
 ImpValue BinaryExpression::accept(ImpValueVisitor* v) {
     return v->visit(this);
 }
@@ -14,13 +15,12 @@ ImpValue FunctionCallExpression::accept(ImpValueVisitor* v) {
     return v->visit(this);
 }
 
-void IfExpression::accept2(ImpValueVisitor* v) {
-    return v->visit(this);
-}
+// void IfExpression::accept2(ImpValueVisitor* v) {
+//     return v->visit(this);
+// }
 
 ImpValue IfExpression::accept(ImpValueVisitor* v) {
-    ImpValue z;
-    return z;
+    return v->visit(this);
 }
 
 ImpValue StringLiteral::accept(ImpValueVisitor* v) {
@@ -59,11 +59,9 @@ void ForStatement::accept(ImpValueVisitor* v) {
     return v->visit(this);
 }
 
-
 void StatementList::accept(ImpValueVisitor* v) {
     return v->visit(this);
 }
-
 
 void FunctionDeclaration::accept(ImpValueVisitor* v) {
     return v->visit(this);
@@ -84,11 +82,8 @@ void KotlinFile::accept(ImpValueVisitor* v) {
 // Funciones visit de ImpInterpreter
 
 void ImpInterpreter::interpret(KotlinFile* kf) {
-    cout << "Inicio de interpretación de KotlinFile" << endl;
     env.clear();
     kf->accept(this);
-
-    cout << "Fin de interpretación de KotlinFile" << endl;
 
     return;
 }
@@ -97,17 +92,14 @@ void ImpInterpreter::visit(KotlinFile* kf) {
         env.add_level();
     fdecs.add_level();
     
-    cout << "   i: Procesando declaraciones ..." << endl;
     for (Declaration* d : kf->decl) {
         d->accept(this);
     }
 
-    cout << "   i: Buscando función main ..." << endl;
     if (fdecs.check("main")) {
         FunctionDeclaration* main = fdecs.lookup("main");
         retcall = false;
 
-        cout << "   i: Ejecutando cuerpo de main ..." << endl;
         main->fbody->accept(this);
 
         if (!retcall && main->returnType == "main") {
@@ -129,11 +121,10 @@ void ImpInterpreter::visit(Declaration* d) {
 }
 
 void ImpInterpreter::visit(Block* b) {
-    cout << "   i: Entranado a bloque" << endl;
     env.add_level();
     b->slist->accept(this);
     env.remove_level();
-    cout << "   i: Saliendo de bloque" << endl;
+
     return;
 }
 /*
@@ -153,11 +144,9 @@ void ImpInterpreter::visit(FunctionDeclaration* fd) {
 void ImpInterpreter::visit(PropertyDeclaration* p) {
     ImpValue v;
 
-    cout << "   i: Procesando declaración de propiedad ..." << endl;    
     if (p->variable->type == "Int") {
         v.type = TINT;
         v.int_value = 0;
-        cout << "       i: Variable de tipo Int" << endl;
     } else if (p->variable->type == "Long") {
         v.type = TLONG;
         v.long_value = 0;
@@ -176,10 +165,8 @@ void ImpInterpreter::visit(PropertyDeclaration* p) {
 }
 
 void ImpInterpreter::visit(StatementList* s) {
-    cout << "   i: Procesando lista de statements ..." << endl;
     list<Statement*>::iterator it;
     for (it = s->statements.begin(); it != s->statements.end(); ++it) {
-        cout << "       i: Ejecutando statement ..." << endl;
         (*it)->accept(this);
         if (retcall)
             break;
@@ -189,7 +176,6 @@ void ImpInterpreter::visit(StatementList* s) {
 
 void ImpInterpreter::visit(AssignmentStatement* s) {
     ImpValue v = s->expression->accept(this);
-    cout << "   i: Asignando valor a variable " << s->identifier << endl;
     if (!env.check(s->identifier)) {
         cout << "Variable " << s->identifier << " no definida" << endl;
         exit(0);
@@ -219,40 +205,42 @@ void ImpInterpreter::visit(PrintlnStatement* s) {
     return;
 }
 
-void ImpInterpreter::visit(IfExpression* s) {
-
-    // FALTANTE: Implementar el cuerpo de este método
-    cout << "Evaluando IfExpression" << endl; // Debug
-    // 1. Evaluar la condición
-    ImpValue v = s->condition->accept(this);
+ImpValue ImpInterpreter::visit(IfExpression* s) {
+    cout << "Evaluando IfExpression" << endl;
     
-    cout << "Evaluando condición if: " << v.bool_value << endl; // Debug
-
-    // 2. Verificar que la condición sea booleana
-    if (v.type != TBOOL) {
-        cout << "Type error en If: esperaba bool en condicional" << endl;
+    // Evaluar la condición
+    ImpValue condition = s->condition->accept(this);
+    // cout << "Tipo de condición: " << condition.type << endl;
+    
+    // Verificar que la condición sea booleana
+    if (condition.type != TBOOL) {
+        cout << "Error: La condición del if debe ser booleana" << endl;
         exit(0);
     }
 
-    // 3. Ejecutar el bloque correspondiente
-    if (v.bool_value) {
-        cout << "Ejecutando bloque then" << endl; // Debug
+    // cout << "Valor de condición: " << (condition.bool_value ? "true" : "false") << endl;
+
+    ImpValue result;
+    result.type = NOTYPE;  // Inicializar resultado
+
+    // Ejecutar el bloque correspondiente según la condición
+    env.add_level();
+    
+    if (condition.bool_value) {
+        // cout << "Ejecutando bloque then" << endl;
         if (s->thenBody != nullptr) {
-            env.add_level(); // Agregar nuevo nivel de ambiente
             s->thenBody->accept(this);
-            env.remove_level(); // Remover nivel al salir
         }
     } else {
-        cout << "Ejecutando bloque else" << endl; // Debug
+        // cout << "Ejecutando bloque else" << endl;
         if (s->elseBody != nullptr) {
-            env.add_level(); // Agregar nuevo nivel de ambiente
             s->elseBody->accept(this);
-            env.remove_level(); // Remover nivel al salir
         }
     }
-    return;
+    
+    env.remove_level();
+    return result;
 }
-
 void ImpInterpreter::visit(WhileStatement* s) {
     ImpValue v = s->condition->accept(this);
     if (v.type != TBOOL) {

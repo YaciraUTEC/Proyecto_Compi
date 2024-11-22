@@ -26,7 +26,7 @@ public:
   virtual ImpValue visit(LiteralExpression* e) = 0;
   virtual ImpValue visit(IdentifierExpression* e) = 0;
   virtual ImpValue visit(FunctionCallExpression* e) = 0;
-  virtual void visit(IfExpression* e) = 0;
+  virtual ImpValue visit(IfExpression* e) = 0;
   virtual ImpValue visit(JumpExpression* e) = 0;
 };
 

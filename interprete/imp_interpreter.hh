@@ -33,7 +33,7 @@ public:
   ImpValue visit(BinaryExpression* e);
   ImpValue visit(IdentifierExpression* e);
   ImpValue visit(FunctionCallExpression* e);
-  void visit(IfExpression* e);
+  ImpValue visit(IfExpression* e);
   ImpValue visit(JumpExpression* e);
   ImpValue visit(LiteralExpression* e);
   ImpValue visit(StringLiteral* e);

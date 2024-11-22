@@ -295,7 +295,7 @@ public:
     Block* elseBody;
     IfExpression(Expression* cond, Block* thenBody, Block* elseBody);
     // -------------------------------------------------------
-    void accept2(ImpValueVisitor* v);
+    // void accept2(ImpValueVisitor* v);
     ImpValue accept(ImpValueVisitor* v);
     // -------------------------------------------------------
     ~IfExpression();

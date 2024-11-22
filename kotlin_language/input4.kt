@@ -1,13 +1,14 @@
-fun suma(a: Int, b: Int): Int {
+fun suma(a: Long, b: Long): Long {
     return a + b
 }
 
 fun main() {
-    var x: Int
-    var y: Int
+    var x: Long
+    var y: Long
 
-    x = 1
-    y = 20
+    x = 300000000
+    y = 200000000
     
     println(suma(x, y))
+
 }
