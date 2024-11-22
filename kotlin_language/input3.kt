@@ -3,8 +3,8 @@ fun main() {
 
     x = 1
     
-    for (i in 0..9) { //tambien declara i como variable local
-        x = x + i
+    for (i in 1..3) {
+        x = x + 1
     }
     
     println(x)

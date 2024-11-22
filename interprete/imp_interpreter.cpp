@@ -97,17 +97,17 @@ void ImpInterpreter::visit(KotlinFile* kf) {
         env.add_level();
     fdecs.add_level();
     
-    cout << "Procesando declaraciones ..." << endl;
+    cout << "   i: Procesando declaraciones ..." << endl;
     for (Declaration* d : kf->decl) {
         d->accept(this);
     }
 
-    cout << "Buscando función main ..." << endl;
+    cout << "   i: Buscando función main ..." << endl;
     if (fdecs.check("main")) {
         FunctionDeclaration* main = fdecs.lookup("main");
         retcall = false;
 
-        cout << "Ejecutando cuerpo de main ..." << endl;
+        cout << "   i: Ejecutando cuerpo de main ..." << endl;
         main->fbody->accept(this);
 
         if (!retcall && main->returnType == "main") {
@@ -129,11 +129,11 @@ void ImpInterpreter::visit(Declaration* d) {
 }
 
 void ImpInterpreter::visit(Block* b) {
-    cout << "Entranado a bloque" << endl;
+    cout << "   i: Entranado a bloque" << endl;
     env.add_level();
     b->slist->accept(this);
     env.remove_level();
-    cout << "Saliendo de bloque" << endl;
+    cout << "   i: Saliendo de bloque" << endl;
     return;
 }
 /*
@@ -152,11 +152,12 @@ void ImpInterpreter::visit(FunctionDeclaration* fd) {
 
 void ImpInterpreter::visit(PropertyDeclaration* p) {
     ImpValue v;
-    
-    // Inicializar con valor por defecto según el tipo
+
+    cout << "   i: Procesando declaración de propiedad ..." << endl;    
     if (p->variable->type == "Int") {
         v.type = TINT;
         v.int_value = 0;
+        cout << "       i: Variable de tipo Int" << endl;
     } else if (p->variable->type == "Long") {
         v.type = TLONG;
         v.long_value = 0;
@@ -175,10 +176,10 @@ void ImpInterpreter::visit(PropertyDeclaration* p) {
 }
 
 void ImpInterpreter::visit(StatementList* s) {
-    cout << "Procesando lista de statements ..." << endl;
+    cout << "   i: Procesando lista de statements ..." << endl;
     list<Statement*>::iterator it;
     for (it = s->statements.begin(); it != s->statements.end(); ++it) {
-        cout << "Ejecutando statement ..." << endl;
+        cout << "       i: Ejecutando statement ..." << endl;
         (*it)->accept(this);
         if (retcall)
             break;
@@ -188,6 +189,7 @@ void ImpInterpreter::visit(StatementList* s) {
 
 void ImpInterpreter::visit(AssignmentStatement* s) {
     ImpValue v = s->expression->accept(this);
+    cout << "   i: Asignando valor a variable " << s->identifier << endl;
     if (!env.check(s->identifier)) {
         cout << "Variable " << s->identifier << " no definida" << endl;
         exit(0);
@@ -218,6 +220,8 @@ void ImpInterpreter::visit(PrintlnStatement* s) {
 }
 
 void ImpInterpreter::visit(IfExpression* s) {
+
+    // FALTANTE: Implementar el cuerpo de este método
     cout << "Evaluando IfExpression" << endl; // Debug
     // 1. Evaluar la condición
     ImpValue v = s->condition->accept(this);
@@ -268,24 +272,45 @@ ImpValue ImpInterpreter::visit(JumpExpression* s) {
 }
 
 void ImpInterpreter::visit(ForStatement* s) {
-
-    // Revisar la implementación de este método
+    cout << "   i: Evaluando ForStatement" << endl;
+    
     env.add_level();
-    ImpValue v = s->expression->accept(this);
 
-    if (v.type != TINT) {
-        cout << "Error de tipos:  tienen que ser enteros" << endl;
+    // Obtener los valores inicial y final directamente de la expresión binaria
+    BinaryExpression* rangeExp = dynamic_cast<BinaryExpression*>(s->expression);
+    if (!rangeExp || rangeExp->op != RANGE_OP) {
+        cout << "Error: Se esperaba una expresión de rango (..)" << endl;
         exit(0);
     }
 
-    ImpValue start = s->expression->accept(this);
-    ImpValue end = s->expression->accept(this);
+    ImpValue start = rangeExp->left->accept(this);
+    ImpValue end = rangeExp->right->accept(this);
 
-    while (start.int_value < end.int_value) {
-        s->fbody->accept(this);
-        start.int_value++;
+    cout << "   i: Rango: " << start.int_value << " .. " << end.int_value << endl;
+
+    // Verificar que ambos valores sean enteros
+    if (start.type != TINT || end.type != TINT) {
+        cout << "Error: Los límites del rango deben ser enteros" << endl;
+        exit(0);
     }
 
+    // Iterar sobre el rango
+    cout << "   3: Iterando sobre el rango" << endl;
+    for (int i = start.int_value; i <= end.int_value; i++) {
+        // Crear y asignar la variable de iteración
+        ImpValue iteratorValue;
+        iteratorValue.type = TINT;
+        iteratorValue.int_value = i;
+        env.add_var(s->variable->identifier, iteratorValue);
+
+        // Ejecutar el cuerpo del for
+        s->fbody->accept(this);
+
+        // Si hay un return, salir del bucle
+        if (retcall) break;
+    }
+
+    env.remove_level();
     return;
 }
 
@@ -300,13 +325,13 @@ void ImpInterpreter::visit(ExpressionStatement* s) {
 }
 
 ImpValue ImpInterpreter::visit(BinaryExpression* e) {
-    cout << "Evaluando BinaryExpression" << endl; // Debug
+    cout << "   i: Evaluando BinaryExpression" << endl; // Debug
     ImpValue result;
     ImpValue v1 = e->left->accept(this);
     ImpValue v2 = e->right->accept(this);
 
-    cout << "Operador izquierdo: " << v1.int_value << endl; // Debug
-    cout << "Operador derecho: " << v2.int_value << endl; // Debug
+    cout << "   i: Operador izquierdo: " << v1.int_value << endl; // Debug
+    cout << "   i: Operador derecho: " << v2.int_value << endl; // Debug
 
     if ((v1.type != TINT && v1.type != TLONG) || 
         (v2.type != TINT && v2.type != TLONG)) {
