@@ -27,7 +27,7 @@ bool ImpType::set_basic_type(TType tt) {
   case ImpType::INT:
   case ImpType::BOOL:
   case ImpType::LONG:
-  case ImpType::VOID:
+  // case ImpType::VOID:
     this->ttype = tt; break;
   default:
     ret = false;
@@ -64,10 +64,10 @@ bool ImpType::set_fun_type(list<string> slist, string s) {
 
 ImpType::TType ImpType::string_to_type(string s) {
   TType tt;
-  if (s.compare("int")==0) tt = ImpType::INT;
-  else if (s.compare("bool")==0) tt = ImpType::BOOL;
-  else if (s.compare("long")==0) tt = ImpType::LONG;
-  else if (s.compare("void")==0) tt = ImpType::VOID;
+  if (s.compare("Int")==0) tt = ImpType::INT;
+  else if (s.compare("Boolean")==0) tt = ImpType::BOOL;
+  else if (s.compare("Long")==0) tt = ImpType::LONG;
+  // else if (s.compare("void")==0) tt = ImpType::VOID;
   else tt = ImpType::NOTYPE; 
   return tt;
 }

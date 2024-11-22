@@ -313,7 +313,7 @@ public:
     void print();
 };
 
-enum LiteralType { BOOLEAN_LITERAL, INTEGER_LITERAL, CHARACTER_LITERAL};
+enum LiteralType { BOOLEAN_LITERAL, INTEGER_LITERAL, LONG_LITERAL, CHARACTER_LITERAL};
 
 class LiteralExpression : public Expression {
 public:

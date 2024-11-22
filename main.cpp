@@ -3,6 +3,9 @@
 #include <string>
 #include "scanner.h"
 #include "parser.h"
+#include "interprete/imp_interpreter.hh"
+#include "interprete/imp_type.hh"
+
 
 using namespace std;
 
@@ -39,12 +42,16 @@ int main(int argc, const char* argv[]) {
         cout << "parsing exitoso" << endl;
         kotlinFile->print();
         cout << "printing exitoso" << endl;
+        cout << "Interpretando..." << endl;
+        ImpInterpreter interpreter;
 
+        interpreter.interpret(kotlinFile);
     }
     catch (const std::runtime_error& e) {
         cout << e.what() << endl;
         return 1;
     }
+
 
     return 0;
 }

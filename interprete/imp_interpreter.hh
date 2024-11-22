@@ -32,6 +32,7 @@ public:
   void visit(ForStatement*);
   ImpValue visit(BinaryExpression* e);
   ImpValue visit(IdentifierExpression* e);
+  ImpValue visit(FunctionCallExpression* e);
   void visit(IfExpression* e);
   ImpValue visit(JumpExpression* e);
   ImpValue visit(LiteralExpression* e);

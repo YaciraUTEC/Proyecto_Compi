@@ -84,55 +84,43 @@ void KotlinFile::accept(ImpValueVisitor* v) {
 // Funciones visit de ImpInterpreter
 
 void ImpInterpreter::interpret(KotlinFile* kf) {
+    cout << "Inicio de interpretación de KotlinFile" << endl;
     env.clear();
     kf->accept(this);
+
+    cout << "Fin de interpretación de KotlinFile" << endl;
+
     return;
 }
 
 void ImpInterpreter::visit(KotlinFile* kf) {
-    
-    // Revisar la implementación de este método
-    env.add_level();
+        env.add_level();
     fdecs.add_level();
     
+    cout << "Procesando declaraciones ..." << endl;
     for (Declaration* d : kf->decl) {
         d->accept(this);
     }
 
+    cout << "Buscando función main ..." << endl;
     if (fdecs.check("main")) {
         FunctionDeclaration* main = fdecs.lookup("main");
         retcall = false;
+
+        cout << "Ejecutando cuerpo de main ..." << endl;
         main->fbody->accept(this);
+
+        if (!retcall && main->returnType == "main") {
+            retcall = true;
+            retval.type = NOTYPE;
+        }
     } else {
         cout << "Error: No se encontro funcion main" << endl;
         exit(0);
     }
 
-    if (!retcall) {
-        cout << "Error: Funcion main no ejecuto RETURN" << endl;
-        exit(0);
-    }
-
     env.remove_level();
     fdecs.remove_level();
-    
-    /*
-    env.add_level();
-    fdecs.add_level();
-    p->decl->
-    p->FunctionDeclarations->accept(this);
-    if (!fdecs.check("main")) {
-        cout << "Error: No se encontro funcion main" << endl;
-        exit(0);
-    }
-    FunctionDeclaration* main_dec = fdecs.lookup("main");
-    retcall = false;
-    main_dec->Block->accept(this);
-    if (!retcall) {
-        cout << "Error: Funcion main no ejecuto RETURN" << endl;
-        exit(0);
-    }
-    */
 }
 
 void ImpInterpreter::visit(Declaration* d) {
@@ -141,9 +129,11 @@ void ImpInterpreter::visit(Declaration* d) {
 }
 
 void ImpInterpreter::visit(Block* b) {
+    cout << "Entranado a bloque" << endl;
     env.add_level();
     b->slist->accept(this);
     env.remove_level();
+    cout << "Saliendo de bloque" << endl;
     return;
 }
 /*
@@ -161,14 +151,34 @@ void ImpInterpreter::visit(FunctionDeclaration* fd) {
 }
 
 void ImpInterpreter::visit(PropertyDeclaration* p) {
-    ImpValue v = p->expression->accept(this);
+    ImpValue v;
+    
+    // Inicializar con valor por defecto según el tipo
+    if (p->variable->type == "Int") {
+        v.type = TINT;
+        v.int_value = 0;
+    } else if (p->variable->type == "Long") {
+        v.type = TLONG;
+        v.long_value = 0;
+    } else if (p->variable->type == "Boolean") {
+        v.type = TBOOL;
+        v.bool_value = false;
+    }
+    
+    // Si hay expresión, evaluarla
+    if (p->expression != nullptr) {
+        v = p->expression->accept(this);
+    }
+    
     env.add_var(p->variable->identifier, v);
     return;
 }
 
 void ImpInterpreter::visit(StatementList* s) {
+    cout << "Procesando lista de statements ..." << endl;
     list<Statement*>::iterator it;
     for (it = s->statements.begin(); it != s->statements.end(); ++it) {
+        cout << "Ejecutando statement ..." << endl;
         (*it)->accept(this);
         if (retcall)
             break;
@@ -179,15 +189,24 @@ void ImpInterpreter::visit(StatementList* s) {
 void ImpInterpreter::visit(AssignmentStatement* s) {
     ImpValue v = s->expression->accept(this);
     if (!env.check(s->identifier)) {
-        cout << "Variable " << s->identifier << " undefined" << endl;
+        cout << "Variable " << s->identifier << " no definida" << endl;
         exit(0);
     }
     ImpValue lhs = env.lookup(s->identifier);
-    if (lhs.type != v.type) {
+    
+    // Permitir asignación si los tipos coinciden exactamente
+    if (!(lhs.type == v.type || (lhs.type == TLONG && v.type == TINT))) {
         cout << "Type Error en Assign: Tipos de variable " << s->identifier;
         cout << " no coinciden" << endl;
         exit(0);
     }
+    
+    // Si es necesario, convertir INT a LONG
+    if (lhs.type == TLONG && v.type == TINT) {
+        v.long_value = (long)v.int_value;
+        v.type = TLONG;
+    }
+    
     env.update(s->identifier, v);
     return;
 }
@@ -199,16 +218,33 @@ void ImpInterpreter::visit(PrintlnStatement* s) {
 }
 
 void ImpInterpreter::visit(IfExpression* s) {
+    cout << "Evaluando IfExpression" << endl; // Debug
+    // 1. Evaluar la condición
     ImpValue v = s->condition->accept(this);
+    
+    cout << "Evaluando condición if: " << v.bool_value << endl; // Debug
+
+    // 2. Verificar que la condición sea booleana
     if (v.type != TBOOL) {
         cout << "Type error en If: esperaba bool en condicional" << endl;
         exit(0);
     }
+
+    // 3. Ejecutar el bloque correspondiente
     if (v.bool_value) {
-        s->thenBody->accept(this);
-    }
-    else {
-        s->elseBody->accept(this);
+        cout << "Ejecutando bloque then" << endl; // Debug
+        if (s->thenBody != nullptr) {
+            env.add_level(); // Agregar nuevo nivel de ambiente
+            s->thenBody->accept(this);
+            env.remove_level(); // Remover nivel al salir
+        }
+    } else {
+        cout << "Ejecutando bloque else" << endl; // Debug
+        if (s->elseBody != nullptr) {
+            env.add_level(); // Agregar nuevo nivel de ambiente
+            s->elseBody->accept(this);
+            env.remove_level(); // Remover nivel al salir
+        }
     }
     return;
 }
@@ -251,22 +287,6 @@ void ImpInterpreter::visit(ForStatement* s) {
     }
 
     return;
-    /*
-    env.add_level();
-    ImpValue start = s->start->accept(this);
-    ImpValue end = s->end->accept(this);
-    ImpValue paso = s->step->accept(this);
-    if (start.type != TINT || end.type != TINT || paso.type != TINT) {
-        cout << "Error de tipos:  tienen que ser enteros" << endl;
-        exit(0);
-    }
-    int a = start.int_value;
-    while (a < end.int_value) {
-        s->b->accept(this);
-        a += paso.int_value;
-    }
-    return;
-    */
 }
 
 void ImpInterpreter::visit(DeclarationStatement* s) {
@@ -280,88 +300,175 @@ void ImpInterpreter::visit(ExpressionStatement* s) {
 }
 
 ImpValue ImpInterpreter::visit(BinaryExpression* e) {
+    cout << "Evaluando BinaryExpression" << endl; // Debug
     ImpValue result;
     ImpValue v1 = e->left->accept(this);
     ImpValue v2 = e->right->accept(this);
-    if (v1.type != TINT || v2.type != TINT) {
-        cout << "Error de tipos: operandos en operacion binaria tienen que ser "
-            "enteros"
-            << endl;
+
+    cout << "Operador izquierdo: " << v1.int_value << endl; // Debug
+    cout << "Operador derecho: " << v2.int_value << endl; // Debug
+
+    if ((v1.type != TINT && v1.type != TLONG) || 
+        (v2.type != TINT && v2.type != TLONG)) {
+        cout << "Error de tipos: operandos en operacion binaria tienen que ser numericos" << endl;
         exit(0);
     }
+
+    // Si alguno es Long, el resultado es Long
+    bool isLongOperation = (v1.type == TLONG || v2.type == TLONG);
+
+    if (!isLongOperation) {
     int iv, iv1, iv2;
     bool bv;
     ImpVType type = NOTYPE;
     iv1 = v1.int_value;
     iv2 = v2.int_value;
     switch (e->op) {
-    case ADD_OP:
-        iv = iv1 + iv2;
-        type = TINT;
-        break;
-    case SUB_OP:
-        iv = iv1 - iv2;
-        type = TINT;
-        break;
-    case MUL_OP:
-        iv = iv1 * iv2;
-        type = TINT;
-        break;
-    case DIV_OP:
-        iv = iv1 / iv2;
-        type = TINT;
-        break;
-    case LT_OP:
-        bv = (iv1 < iv2) ? 1 : 0;
-        type = TBOOL;
-        break;
-    case LE_OP:
-        bv = (iv1 <= iv2) ? 1 : 0;
-        type = TBOOL;
-        break;
-    case EQ_OP:
-        bv = (iv1 == iv2) ? 1 : 0;
-        type = TBOOL;
-        break;
-    case NE_OP:
-        bv = (iv1 != iv2) ? 1 : 0;
-        type = TBOOL;
-        break;
-    case GT_OP:
-        bv = (iv1 > iv2) ? 1 : 0;
-        type = TBOOL;
-        break;
-    case GE_OP:
-        bv = (iv1 >= iv2) ? 1 : 0;
-        type = TBOOL;
-        break;
-    case AND_OP:
-        bv = (v1.bool_value && v2.bool_value) ? 1 : 0;
-        type = TBOOL;
-        break;
-    case OR_OP:
-        bv = (v1.bool_value || v2.bool_value) ? 1 : 0;
-        type = TBOOL;
-        break;
-    case RANGE_OP:
-        // después
-        break;
+        case ADD_OP:
+            iv = iv1 + iv2;
+            type = TINT;
+            break;
+        case SUB_OP:
+            iv = iv1 - iv2;
+            type = TINT;
+            break;
+        case MUL_OP:
+            iv = iv1 * iv2;
+            type = TINT;
+            break;
+        case DIV_OP:
+            iv = iv1 / iv2;
+            type = TINT;
+            break;
+        case LT_OP:
+            bv = (iv1 < iv2) ? 1 : 0;
+            type = TBOOL;
+            break;
+        case LE_OP:
+            bv = (iv1 <= iv2) ? 1 : 0;
+            type = TBOOL;
+            break;
+        case EQ_OP:
+            bv = (iv1 == iv2) ? 1 : 0;
+            type = TBOOL;
+            break;
+        case NE_OP:
+            bv = (iv1 != iv2) ? 1 : 0;
+            type = TBOOL;
+            break;
+        case GT_OP:
+            bv = (iv1 > iv2) ? 1 : 0;
+            type = TBOOL;
+            break;
+        case GE_OP:
+            bv = (iv1 >= iv2) ? 1 : 0;
+            type = TBOOL;
+            break;
+        case AND_OP:
+            bv = (v1.bool_value && v2.bool_value) ? 1 : 0;
+            type = TBOOL;
+            break;
+        case OR_OP:
+            bv = (v1.bool_value || v2.bool_value) ? 1 : 0;
+            type = TBOOL;
+            break;
+        case RANGE_OP:
+            // después
+            break;
     }
     if (type == TINT)
         result.int_value = iv;
     else
         result.bool_value = bv;
     result.type = type;
+    } else {
+        long lv, lv1, lv2;
+        bool bv;
+        ImpVType type = NOTYPE;
+        lv1 = v1.long_value;
+        lv2 = v2.long_value;
+        switch (e->op) {
+            case ADD_OP:
+                lv = lv1 + lv2;
+                type = TLONG;
+                break;
+            case SUB_OP:
+                lv = lv1 - lv2;
+                type = TLONG;
+                break;
+            case MUL_OP:
+                lv = lv1 * lv2;
+                type = TLONG;
+                break;
+            case DIV_OP:
+                lv = lv1 / lv2;
+                type = TLONG;
+                break;
+            case LT_OP:
+                bv = (lv1 < lv2) ? 1 : 0;
+                type = TBOOL;
+                break;
+            case LE_OP:
+                bv = (lv1 <= lv2) ? 1 : 0;
+                type = TBOOL;
+                break;
+            case EQ_OP:
+                bv = (lv1 == lv2) ? 1 : 0;
+                type = TBOOL;
+                break;
+            case NE_OP:
+                bv = (lv1 != lv2) ? 1 : 0;
+                type = TBOOL;
+                break;
+            case GT_OP:
+                bv = (lv1 > lv2) ? 1 : 0;
+                type = TBOOL;
+                break;
+            case GE_OP:
+                bv = (lv1 >= lv2) ? 1 : 0;
+                type = TBOOL;
+                break;
+            case AND_OP:
+                bv = (v1.bool_value && v2.bool_value) ? 1 : 0;
+                type = TBOOL;
+                break;
+            case OR_OP:
+                bv = (v1.bool_value || v2.bool_value) ? 1 : 0;
+                type = TBOOL;
+                break;
+            case RANGE_OP:
+                // después
+                break;
+        }
+        if (type == TLONG)
+            result.long_value = lv;
+        else
+            result.bool_value = bv;
+        result.type = type;
+    }
     return result;
 }
 
 ImpValue ImpInterpreter::visit(LiteralExpression* e) {
 
     ImpValue v;
-    /*
-    v.set_default_value(TINT);
-    v.int_value = e->value;
-     */
+    switch(e->type) {
+        case INTEGER_LITERAL:
+            v.type = TINT;
+            v.int_value = stoi(e->value);
+            break;
+        case LONG_LITERAL:
+            v.type = TLONG;
+            v.long_value = stol(e->value);
+            break;
+        case BOOLEAN_LITERAL:
+            v.type = TBOOL;
+            v.bool_value = (e->value == "true");
+            break;
+        case CHARACTER_LITERAL:
+            cout << "Error: Caracteres no soportados" << endl;
+            break;
+    }
     return v;
 }
 
@@ -381,6 +488,47 @@ ImpValue ImpInterpreter::visit(IdentifierExpression* e) {
         cout << "Variable indefinida: " << e->identifier << endl;
         exit(0);
     }
+}
+
+ImpValue ImpInterpreter::visit(FunctionCallExpression* e) {
+    // -------------------------------------------------------
+    // Revisar la implementación de este método
+    // -------------------------------------------------------
+
+    // Verificar que la función exista
+    if (!fdecs.check(e->identifier)) {
+        cout << "Error: Función " << e->identifier << " no definida" << endl;
+        exit(0);
+    }
+
+    FunctionDeclaration* fd = fdecs.lookup(e->identifier);
+    env.add_level();
+
+    // Verificar número de argumentos
+    if (fd->parameters.size() != e->arguments.size()) {
+        cout << "Error: Número incorrecto de argumentos para " << e->identifier << endl;
+        exit(0);
+    }
+
+    // Evaluar y asignar argumentos
+    auto paramIt = fd->parameters.begin();
+    auto argIt = e->arguments.begin();
+    for (; paramIt != fd->parameters.end(); ++paramIt, ++argIt) {
+        ImpValue v = (*argIt)->accept(this);
+        env.add_var((*paramIt)->parameter->identifier, v);
+    }
+
+    // Ejecutar cuerpo de la función
+    retcall = false;
+    fd->fbody->accept(this);
+    
+    if (!retcall) {
+        cout << "Error: Función " << e->identifier << " no ejecutó return" << endl;
+        exit(0);
+    }
+
+    env.remove_level();
+    return retval;    
 }
 
 ImpValue ImpInterpreter::visit(StringLiteral* e) {

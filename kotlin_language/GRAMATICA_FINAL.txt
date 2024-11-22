@@ -1,31 +1,31 @@
-// Gramática - Kotlin
+Gramática - Kotlin
 
-// kotlinFile ::= {declaration [';']}
-// declaration ::= functionDeclaration | propertyDeclaration
-// propertyDeclaration ::= ('val' | 'var') variableDeclaration ['=' expression] [';']
-// functionDeclaration ::= 'fun' Identifier functionValueParameters [':' type] block
-// functionValueParameters ::= '(' [functionValueParameter {',' functionValueParameter}] ')'
-// functionValueParameter ::= parameter
-// parameter ::= Identifier ':' type
-// block ::= '{' statements '}'
-// statements ::= [statement {';' statement}] [';']
-// statement ::= (declaration | assignment | forStatement | whileStatement | expression | printlnStatement)
-// assignment ::= Identifier '=' expression
-// forStatement ::= 'for' '(' variableDeclaration 'in' expression ')' block
-// variableDeclaration ::= Identifier [':' type]
-// whileStatement ::= 'while' '(' expression ')' block
-// printlnStatement ::= 'println' '(' expression ')'
-// expression ::= disjunction
-// disjunction ::= conjunction {'||' conjunction}
-// conjunction ::= equality {'&&' equality}
-// equality ::= comparison {('!=' | '==') comparison}
-// comparison ::= rangeExpression {('<' | '>' | '<=' | '>=') rangeExpression}
-// rangeExpression ::= additiveExpression {('..' | '..<') additiveExpression}
-// additiveExpression ::= multiplicativeExpression {('+' | '-') multiplicativeExpression}
-// multiplicativeExpression ::= postfixUnaryExpression {('*' | '/') postfixUnaryExpression}
-// postfixUnaryExpression ::= primaryExpression [ '('  [ expression { ',' expression}]  ')' ]
-// primaryExpression ::= Identifier | '(' expression ')' | jumpExpression | stringLiteral | ifExpression | literalExpression
-// jumpExpression ::= 'return' expression
-// ifExpression ::= '(' expression ')' (block | ([block] [';'] 'else' (block | ';')) | ';')
-// literalExpression ::= BooleanLiteral | IntegerLiteral | CharacterLiteral
-// Identifier ::= (Letter | '_ ') {Letter | '_' | UnicodeDigit} | '´' QuotedSymbol {QuotedSymbol} '`'
+kotlinFile ::= {declaration [';']}
+declaration ::= functionDeclaration | propertyDeclaration
+propertyDeclaration ::= ('val' | 'var') variableDeclaration ['=' expression] [';']
+functionDeclaration ::= 'fun' Identifier functionValueParameters [':' type] block
+functionValueParameters ::= '(' [functionValueParameter {',' functionValueParameter}] ')'
+functionValueParameter ::= parameter
+parameter ::= Identifier ':' type
+block ::= '{' statements '}'
+statements ::= [statement {';' statement}] [';']
+statement ::= (declaration | assignment | forStatement | whileStatement | expression | printlnStatement)
+assignment ::= Identifier '=' expression
+forStatement ::= 'for' '(' variableDeclaration 'in' expression ')' block
+variableDeclaration ::= Identifier [':' type]
+whileStatement ::= 'while' '(' expression ')' block
+printlnStatement ::= 'println' '(' expression ')'
+expression ::= disjunction
+disjunction ::= conjunction {'||' conjunction}
+conjunction ::= equality {'&&' equality}
+equality ::= comparison {('!=' | '==') comparison}
+comparison ::= rangeExpression {('<' | '>' | '<=' | '>=') rangeExpression}
+rangeExpression ::= additiveExpression {('..' | '..<') additiveExpression}
+additiveExpression ::= multiplicativeExpression {('+' | '-') multiplicativeExpression}
+multiplicativeExpression ::= postfixUnaryExpression {('*' | '/') postfixUnaryExpression}
+postfixUnaryExpression ::= primaryExpression [ '('  [ expression { ',' expression}]  ')' ]
+primaryExpression ::= Identifier | '(' expression ')' | jumpExpression | stringLiteral | ifExpression | literalExpression
+jumpExpression ::= 'return' expression
+ifExpression ::= '(' expression ')' (block | ([block] [';'] 'else' (block | ';')) | ';')
+literalExpression ::= BooleanLiteral | IntegerLiteral | CharacterLiteral
+Identifier ::= (Letter | '_ ') {Letter | '_' | UnicodeDigit} | '´' QuotedSymbol {QuotedSymbol} '`'

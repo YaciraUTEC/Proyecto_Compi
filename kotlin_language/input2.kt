@@ -7,7 +7,10 @@ fun main() {
     
     if (x > y) {
         println(x)
+        x = 20
     } else {
+        x = 20
         println(y)
     }
+    println(x)
 }

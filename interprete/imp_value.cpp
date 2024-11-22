@@ -23,8 +23,7 @@ void ImpValue::set_default_value(ImpVType tt) {
   return;
 }
 
-std::ostream& operator << ( std::ostream& outs, const ImpValue & v )
-{
+std::ostream& operator << ( std::ostream& outs, const ImpValue & v ) {
   if (v.type == TINT)
     outs << v.int_value;
   else if (v.type == TLONG)
