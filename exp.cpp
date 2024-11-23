@@ -251,19 +251,6 @@ LiteralExpression::~LiteralExpression() {}
 void LiteralExpression::print() {
     cout << value;
 }
-/* -----------------------Puede servir--------------------------
-int LiteralExpression::eval() {
-    int result;
-    switch (type) {
-    case BOOLEAN_LITERAL: result = value == "true"; break;
-    case INTEGER_LITERAL: result = stoi(value); break;
-    case CHARACTER_LITERAL: result = value[0]; break;
-    case STRING_LITERAL: result = 0; break;
-    default: result = 0;
-    }
-    return result;
-}
-*/
 
 // IfExpression
 IfExpression::IfExpression(Expression* cond, Block* thenBody, Block* elseBody)
@@ -328,32 +315,6 @@ void BinaryExpression::print() {
     cout << " " << binopToChar(op) << " ";
     right->print();
 };
-/* -----------------------Puede servir--------------------------
-int BinaryExpression::eval() {
-    int result;
-    int v1 = left->eval();
-    int v2 = right->eval();
-    switch (op) {
-    case ADD_OP: result = v1 + v2; break;
-    case SUB_OP: result = v1 - v2; break;
-    case MUL_OP: result = v1 * v2; break;
-    case DIV_OP: result = v1 / v2; break;
-    case LT_OP: result = v1 < v2; break;
-    case GT_OP: result = v1 > v2; break;
-    case LE_OP: result = v1 <= v2; break;
-    case GE_OP: result = v1 >= v2; break;
-    case EQ_OP: result = v1 == v2; break;
-    case NE_OP: result = v1 != v2; break;
-    case AND_OP: result = v1 && v2; break;
-    case OR_OP: result = v1 || v2; break;
-    case RANGE_OP: result = 0; break;
-    default:
-        cout << "Operador desconocido" << endl;
-        result = 0;
-    }
-    return result;
-};
-*/
 
 string Expression::binopToChar(BinaryOp op) {
     string  c;

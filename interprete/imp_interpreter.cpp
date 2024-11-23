@@ -2,7 +2,6 @@
 
 // Funciones accept de las clases del AST
 
-
 ImpValue BinaryExpression::accept(ImpValueVisitor* v) {
     return v->visit(this);
 }
@@ -127,15 +126,7 @@ void ImpInterpreter::visit(Block* b) {
 
     return;
 }
-/*
-void ImpInterpreter::visit(FunctionDeclarationList* s) {
-    list<FunctionDeclaration*>::iterator it;
-    for (it = s->flist.begin(); it != s->flist.end(); ++it) {
-        (*it)->accept(this);
-    }
-    return;
-}
-*/
+
 void ImpInterpreter::visit(FunctionDeclaration* fd) {
     fdecs.add_var(fd->identifier, fd);
     return;
@@ -206,19 +197,15 @@ void ImpInterpreter::visit(PrintlnStatement* s) {
 }
 
 ImpValue ImpInterpreter::visit(IfExpression* s) {
-    cout << "Evaluando IfExpression" << endl;
-    
+
     // Evaluar la condición
     ImpValue condition = s->condition->accept(this);
-    // cout << "Tipo de condición: " << condition.type << endl;
-    
+
     // Verificar que la condición sea booleana
     if (condition.type != TBOOL) {
         cout << "Error: La condición del if debe ser booleana" << endl;
         exit(0);
     }
-
-    // cout << "Valor de condición: " << (condition.bool_value ? "true" : "false") << endl;
 
     ImpValue result;
     result.type = NOTYPE;  // Inicializar resultado
@@ -227,12 +214,10 @@ ImpValue ImpInterpreter::visit(IfExpression* s) {
     env.add_level();
     
     if (condition.bool_value) {
-        // cout << "Ejecutando bloque then" << endl;
         if (s->thenBody != nullptr) {
             s->thenBody->accept(this);
         }
     } else {
-        // cout << "Ejecutando bloque else" << endl;
         if (s->elseBody != nullptr) {
             s->elseBody->accept(this);
         }
@@ -260,10 +245,7 @@ ImpValue ImpInterpreter::visit(JumpExpression* s) {
 }
 
 void ImpInterpreter::visit(ForStatement* s) {
-    cout << "   i: Evaluando ForStatement" << endl;
-    
     env.add_level();
-
     // Obtener los valores inicial y final directamente de la expresión binaria
     BinaryExpression* rangeExp = dynamic_cast<BinaryExpression*>(s->expression);
     if (!rangeExp || rangeExp->op != RANGE_OP) {
@@ -274,8 +256,6 @@ void ImpInterpreter::visit(ForStatement* s) {
     ImpValue start = rangeExp->left->accept(this);
     ImpValue end = rangeExp->right->accept(this);
 
-    cout << "   i: Rango: " << start.int_value << " .. " << end.int_value << endl;
-
     // Verificar que ambos valores sean enteros
     if (start.type != TINT || end.type != TINT) {
         cout << "Error: Los límites del rango deben ser enteros" << endl;
@@ -283,7 +263,6 @@ void ImpInterpreter::visit(ForStatement* s) {
     }
 
     // Iterar sobre el rango
-    cout << "   3: Iterando sobre el rango" << endl;
     for (int i = start.int_value; i <= end.int_value; i++) {
         // Crear y asignar la variable de iteración
         ImpValue iteratorValue;
@@ -313,13 +292,9 @@ void ImpInterpreter::visit(ExpressionStatement* s) {
 }
 
 ImpValue ImpInterpreter::visit(BinaryExpression* e) {
-    cout << "   i: Evaluando BinaryExpression" << endl; // Debug
     ImpValue result;
     ImpValue v1 = e->left->accept(this);
     ImpValue v2 = e->right->accept(this);
-
-    cout << "   i: Operador izquierdo: " << v1.int_value << endl; // Debug
-    cout << "   i: Operador derecho: " << v2.int_value << endl; // Debug
 
     if ((v1.type != TINT && v1.type != TLONG) || 
         (v2.type != TINT && v2.type != TLONG)) {
@@ -485,15 +460,6 @@ ImpValue ImpInterpreter::visit(LiteralExpression* e) {
     return v;
 }
 
-/*
-ImpValue ImpInterpreter::visit(BoolExp* e) {
-    ImpValue v;
-    v.set_default_value(TBOOL);
-    v.int_value = e->value;
-    return v;
-}
-*/
-
 ImpValue ImpInterpreter::visit(IdentifierExpression* e) {
     if (env.check(e->identifier))
         return env.lookup(e->identifier);
@@ -504,9 +470,6 @@ ImpValue ImpInterpreter::visit(IdentifierExpression* e) {
 }
 
 ImpValue ImpInterpreter::visit(FunctionCallExpression* e) {
-    // -------------------------------------------------------
-    // Revisar la implementación de este método
-    // -------------------------------------------------------
 
     // Verificar que la función exista
     if (!fdecs.check(e->identifier)) {
@@ -552,46 +515,3 @@ ImpValue ImpInterpreter::visit(StringLiteral* e) {
      */
     return v;
 }
-
-/*
-ImpValue ImpInterpreter::visit(FCallExp* e) {
-    FunctionDeclaration* fdec = fdecs.lookup(e->fname);
-    env.add_level();
-    list<Exp*>::iterator it;
-    list<string>::iterator varit;
-    list<string>::iterator vartype;
-    ImpVType tt;
-    if (fdec->vars.size() != e->args.size()) {
-        cout << "Error: Numero de parametros incorrecto en llamada a "
-            << fdec->fname << endl;
-        exit(0);
-    }
-    for (it = e->args.begin(), varit = fdec->vars.begin(),
-        vartype = fdec->types.begin();
-        it != e->args.end(); ++it, ++varit, ++vartype) {
-        tt = ImpValue::get_basic_type(*vartype);
-        ImpValue v = (*it)->accept(this);
-        if (v.type != tt) {
-            cout << "Error FCall: Tipos de param y arg no coinciden. Funcion "
-                << fdec->fname << " param " << *varit << endl;
-            exit(0);
-        }
-        env.add_var(*varit, v);
-    }
-    retcall = false;
-    fdec->Block->accept(this);
-    if (!retcall) {
-        cout << "Error: Funcion " << e->fname << " no ejecuto RETURN" << endl;
-        exit(0);
-    }
-    retcall = false;
-    env.remove_level();
-    tt = ImpValue::get_basic_type(fdec->rtype);
-    if (tt != retval.type) {
-        cout << "Error: Tipo de retorno incorrecto de funcion " << fdec->fname
-            << endl;
-        exit(0);
-    }
-    return retval;
-}
-*/

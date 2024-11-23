@@ -1,7 +1,3 @@
-//
-// Created by denz on 21/11/24.
-//
-
 #ifndef PROYECTO_COMPI_IMP_TYPE_HH
 #define PROYECTO_COMPI_IMP_TYPE_HH
 

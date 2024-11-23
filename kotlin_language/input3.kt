@@ -5,6 +5,7 @@ fun main() {
     
     for (i in 1..3) {
         x = x + 1
+        println(i)
     }
     
     println(x)
