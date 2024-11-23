@@ -12,7 +12,7 @@ using namespace std;
 
 class ImpType {
 public:
-    enum TType { NOTYPE=0,INT, BOOL, LONG , FUN };
+    enum TType { NOTYPE=0,INT, BOOL, LONG , FUN, UNIT};
     static const char* type_names[6];
     TType ttype;
     vector<TType> types;

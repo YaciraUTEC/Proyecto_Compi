@@ -203,7 +203,6 @@ void ImpInterpreter::visit(Block* b) {
     env.add_level();
     b->slist->accept(this);
     env.remove_level();
-
     return;
 }
 

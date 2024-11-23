@@ -6,7 +6,7 @@
 // #include "visitor.h"
 #include "interprete/imp_interpreter.hh"
 #include "interprete/imp_type.hh"
-// #include "codegen/imp_type_checker.hh"
+#include "codegen/imp_type_checker.hh"
 // #include "codegen/imp_codegen.hh"
 
 
@@ -50,7 +50,10 @@ int main(int argc, const char* argv[]) {
 
         interpreter.interpret(kotlinFile);
 
-        // ImpTypeChecker typeChecker;
+        ImpTypeChecker typeChecker;
+
+        cout << "TypeChecker:" << endl;
+        typeChecker.typecheck(kotlinFile);
 
 
         // ImpCodeGen codegen(&typeChecker);

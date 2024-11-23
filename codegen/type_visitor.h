@@ -4,12 +4,31 @@
 #include "../exp.h"
 #include "../interprete/imp_type.hh"
 
+class KotlinFile;
+class Block;
+class FunctionDeclaration;
+class PropertyDeclaration;
+class StatementList;
+class AssignmentStatement;
+class PrintlnStatement;
+class ExpressionStatement;
+class WhileStatement;
+class DeclarationStatement;
+class ForStatement;
+class BinaryExpression;
+class StringLiteral;
+class LiteralExpression;
+class IdentifierExpression;
+class FunctionCallExpression;
+class IfExpression;
+class JumpExpression;
+
 class TypeVisitor {
 public:
     virtual void visit(KotlinFile* kf) = 0;
     virtual void visit(Block* b) = 0;
     
-    virtual void visit(FunctionDeclaration*e);
+    virtual void visit(FunctionDeclaration*e) = 0;
 
     virtual void visit(PropertyDeclaration* e) = 0;
     virtual void visit(StatementList* e) = 0;

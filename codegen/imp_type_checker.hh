@@ -27,7 +27,8 @@ private:
   bool has_main;
   ImpType booltype;
   ImpType inttype;
-  ImpType voidtype;
+  ImpType longtype;
+  ImpType unittype;
   ImpType maintype;
 
   vector<string> fnames; 
@@ -58,31 +59,6 @@ public:
   ImpType visit(IfExpression* e);
   ImpType visit(JumpExpression* e);
 
-//   void typecheck(Program*);
-//   void visit(Program*);
-//   void visit(Body*);
-//   void visit(VarDecList*);
-//   void visit(VarDec*);
-//   void visit(FunDecList*);
-//   void visit(FunDec*);
-//   void visit(StatementList*);
-//   void visit(AssignStatement*);
-//   void visit(PrintStatement*);
-//   void visit(IfStatement*);
-//   void visit(WhileStatement*);
-//   void visit(ReturnStatement* e);
-//   void visit(ForStatement*);
-//   void visit(FCallStatement*);
-  
-//   ImpType visit(BinaryExp* e);
-//   ImpType visit(NumberExp* e);
-//   ImpType visit(BoolExp* e);
-//   ImpType visit(IdentifierExp* e);
-//   ImpType visit(IFExp* e);
-//   ImpType visit(FCallExp* e);
-// private:
-//   void add_fundec(FunDec* fd);
-//   ImpType process_fcall(FCallExp*);
 };
 
 

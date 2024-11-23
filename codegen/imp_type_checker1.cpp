@@ -1,22 +1,23 @@
 #include"imp_type_checker.hh"
 
 ImpTypeChecker::ImpTypeChecker():inttype(), booltype(), longtype(), unittype() {
-    inttype.set_basic_type("Int");
-    longtype.set_basic_type("Long");
-    booltype.set_basic_type("Boolean");
-    unittype.set_basic_type("Unit");
-    list<string> noparams;
-    maintype.set_fun_type(noparams,"Unit");
-    has_main = false;
-    sp = 0;
-    max_sp = 0;
-    dir = 0;
-    max_dir = 0;
+  inttype.set_basic_type("Int");
+  longtype.set_basic_type("Long");
+  booltype.set_basic_type("Boolean");
+  unittype.set_basic_type("Unit");
+  list<string> noparams;
+  maintype.set_fun_type(noparams,"Unit");
+  has_main = false;
+  sp = 0;
+  max_sp = 0;
+  dir = 0;
+  max_dir = 0;
+
 }
 
 void ImpTypeChecker::sp_incr(int n) {
-    sp++;
-    if (sp > max_sp) max_sp = sp;
+  sp++;
+  if (sp > max_sp) max_sp = sp;
 }
 
 void ImpTypeChecker::sp_decr(int n) {
@@ -62,62 +63,73 @@ void ImpTypeChecker::visit(Block* b) {
 }
 
 void ImpTypeChecker::visit(PropertyDeclaration* vd) {
-    ImpType type;
-    type.set_basic_type(vd->variable->type);
-    
-    if (type.ttype == ImpType::NOTYPE) {
-        cout << "Error: Tipo invalido para variable " << vd->variable->identifier << endl;
-        exit(0);
-    }
-    
-    if (vd->expression != nullptr) {
-        ImpType expr_type = vd->expression->accept(this);
-        if (!expr_type.match(type)) {
-            cout << "Error: Tipo de expresión no coincide con tipo declarado para " 
-                << vd->variable->identifier << endl;
-            exit(0);
-        }
-        sp_decr(1);
-    }
-    
-    env.add_var(vd->variable->identifier, type);
-    dir++;
-    if (dir > max_dir) max_dir = dir;
+  ImpType type;
+  type.set_basic_type(vd->variable->type);
+  
+  if (type.ttype == ImpType::NOTYPE) {
+      cout << "Error: Tipo invalido para variable " << vd->variable->identifier << endl;
+      exit(0);
+  }
+  
+  if (vd->expression != nullptr) {
+      ImpType expr_type = vd->expression->accept(this);
+      if (!expr_type.match(type)) {
+          cout << "Error: Tipo de expresión no coincide con tipo declarado para " 
+              << vd->variable->identifier << endl;
+          exit(0);
+      }
+      sp_decr(1); // Decrementar la pila por la expresión evaluada
+  }
+  
+  env.add_var(vd->variable->identifier, type);
+  
+  dir++;
+  if (dir > max_dir) max_dir = dir;
+  
 }
 
 void ImpTypeChecker::visit(FunctionDeclaration* fd) {
+    cout << "         4- Inicio de visit(FunctionDeclaration*)" << endl;
+    cout << "Función: " << fd->identifier << ", tipo retorno: " << fd->returnType << endl;
+    
+    // Asignar Unit como tipo de retorno por defecto
+    if (fd->returnType.empty()) {
+        fd->returnType = "Unit";
+        cout << "Tipo de retorno asignado por defecto: Unit" << endl;
+    }
+    
+    // Verificar si es la función main
+    if (fd->identifier == "main") {
+        cout << "Verificando función main" << endl;
+        if (fd->returnType != "Unit") {
+            cout << "Error: main debe retornar Unit" << endl;
+            exit(0);
+        }
+        has_main = true;
+    }
+
+    // Crear tipo de función
     ImpType funtype;
     list<string> paramTypes;
     
+    // Recolectar tipos de parámetros
     for (auto p : fd->parameters) {
         paramTypes.push_back(p->parameter->type);
     }
     
-    if (fd->identifier == "main") {
-        if (!paramTypes.empty()) {
-            cout << "Error: main no debe tener parámetros" << endl;
-            exit(0);
-        }
-        
-        fd->returnType = "Unit";
-        
-        cout << "5D: "   << funtype << endl;
-        if (!funtype.set_fun_type(list<string>(), "Unit")) {
-            cout << "Error al crear tipo de función main" << endl;
-            exit(0);
-        }
-        has_main = true;
-    } else {
-        // Para otras funciones usar los tipos normalmente
-        if (!funtype.set_fun_type(paramTypes, fd->returnType)) {
-            cout << "Error al crear tipo de función" << endl;
-            exit(0);
-        }
+    cout << "Creando tipo de función con retorno: " << fd->returnType << endl;
+    // Solo llamar set_fun_type una vez
+    if (!funtype.set_fun_type(paramTypes, fd->returnType)) {
+        cout << "Error al crear tipo de función" << endl;
+        exit(0);
     }
+    cout << "Tipo de función creado: " << funtype << endl;
     
+    // Agregar al environment
     env.add_var(fd->identifier, funtype);
     env.add_level();
-
+    
+    // Agregar parámetros al nuevo nivel
     for (auto p : fd->parameters) {
         ImpType ptype;
         if (!ptype.set_basic_type(p->parameter->type)) {
@@ -126,9 +138,8 @@ void ImpTypeChecker::visit(FunctionDeclaration* fd) {
         }
         env.add_var(p->parameter->identifier, ptype);
     }
-
-    env.add_var("return", funtype);
     
+    // Procesar el cuerpo
     fd->fbody->accept(this);
     
     // Crear entrada en la tabla de funciones
@@ -138,37 +149,40 @@ void ImpTypeChecker::visit(FunctionDeclaration* fd) {
     fentry.max_stack = max_sp;
     fentry.mem_locals = max_dir;
     
+    cout << "Agregando función a tabla: " << fentry.fname << " : " << fentry.ftype << endl;
+    
     fnames.push_back(fd->identifier);
     ftable.add_var(fd->identifier, fentry);
     
     env.remove_level();
-}
-
-void ImpTypeChecker::visit(AssignmentStatement* s) {
-    if (!env.check(s->identifier)) {
-        cout << "Error: Variable " << s->identifier << " no definida" << endl;
-        exit(0);
-    }
-    
-    ImpType varType = env.lookup(s->identifier);
-    
-    ImpType exprType = s->expression->accept(this);
-    
-    if (!exprType.match(varType)) {
-        if (!(varType.ttype == ImpType::LONG && exprType.ttype == ImpType::INT)) {
-            cout << "Error: Tipo de expresión no coincide con tipo de variable " 
-                    << s->identifier << endl;
-            exit(0);
-        }
-    }
-
-    sp_decr(1);
+    cout << "         4- Fin de visit(FunctionDeclaration*)" << endl;
 }
 
 void ImpTypeChecker::visit(StatementList* s) {
-    for (auto stmt : s->statements) {
-        stmt->accept(this);
-    }
+  cout << "         5- Inicio de visit(StatementList*)" << endl;
+  list<Statement*>::iterator it;
+  for (it = s->statements.begin(); it != s->statements.end(); ++it) {
+    (*it)->accept(this);
+  }
+  cout << "         5- Fin de visit(StatementList*)" << endl;
+}
+
+void ImpTypeChecker::visit(AssignmentStatement* s) {
+  cout << "         6- Inicio de visit(AssignmentStatement*)" << endl;
+  ImpType rhs_type = s->expression->accept(this);
+  
+  if (!env.check(s->identifier)) {
+      cout << "Variable " << s->identifier << " indefinida" << endl;
+      exit(0);
+  }
+  
+  ImpType lhs_type = env.lookup(s->identifier);
+  if (!rhs_type.match(lhs_type)) {
+      cout << "Error de tipos en asignación a " << s->identifier << endl;
+      exit(0);
+  }
+  sp_decr(1);
+  cout << "         6- Fin de visit(AssignmentStatement*)" << endl;
 }
 
 void ImpTypeChecker::visit(PrintlnStatement* s) {
@@ -179,63 +193,11 @@ void ImpTypeChecker::visit(PrintlnStatement* s) {
 }
 
 void ImpTypeChecker::visit(ExpressionStatement* e) {
-    e->expression->accept(this);
-    sp_decr(1);
+  e->expression->accept(this);
+  sp_decr(1);
 }
 
 
-void ImpTypeChecker::visit(DeclarationStatement* e) {
-    e->declaration->accept(this);
-}
-
-
-ImpType ImpTypeChecker::visit(JumpExpression* s) {
-    ImpType rtype = env.lookup("return");
-    ImpType etype;
-    
-    if (s->returnExpression != nullptr) {
-        etype = s->returnExpression->accept(this);
-        sp_decr(1);
-    } else {
-        etype.set_basic_type("Unit");
-    }
-    
-    if (!rtype.match(etype)) {
-        cout << "Error: tipo de retorno no coincide" << endl;
-        exit(0);
-    }
-    
-    return etype;
-}
-
-ImpType ImpTypeChecker::visit(LiteralExpression* e) {
-    ImpType t;
-    switch(e->type) {
-        case INTEGER_LITERAL:
-            t.set_basic_type("Int");
-            break;
-        case LONG_LITERAL:
-            t.set_basic_type("Long");
-            break;
-        case BOOLEAN_LITERAL:
-            t.set_basic_type("Boolean");
-            break;
-        case CHARACTER_LITERAL:
-            cout << "Error: Caracteres no soportados" << endl;
-            exit(0);
-    }
-    sp_incr(1);
-    return t;
-}
-
-ImpType ImpTypeChecker::visit(IdentifierExpression* e) {
-  if (!env.check(e->identifier)) {
-      cout << "Error: variable " << e->identifier << " no definida" << endl;
-      exit(0);
-  }
-  sp_incr(1);
-  return env.lookup(e->identifier);
-}
 
 ImpType ImpTypeChecker::visit(IfExpression* s) {
   ImpType cond_type = s->condition->accept(this);
@@ -257,7 +219,6 @@ ImpType ImpTypeChecker::visit(IfExpression* s) {
   return t;
 }
 
-
 void ImpTypeChecker::visit(WhileStatement* s) {
   if (!s->condition->accept(this).match(booltype)) {
     cout << "Expresion conditional en IF debe de ser bool" << endl;
@@ -266,6 +227,31 @@ void ImpTypeChecker::visit(WhileStatement* s) {
   sp_decr(1);
   s->wbody->accept(this);
  return;
+}
+
+void ImpTypeChecker::visit(DeclarationStatement* e){
+  e->declaration->accept(this);
+}
+
+
+
+ImpType ImpTypeChecker::visit(JumpExpression* s) {
+  ImpType rtype = env.lookup("return");
+  ImpType etype;
+  
+  if (s->returnExpression != nullptr) {
+      etype = s->returnExpression->accept(this);
+      sp_decr(1);
+  } else {
+      etype = unittype;
+  }
+  
+  if (!rtype.match(etype)) {
+      cout << "Error: tipo de retorno no coincide" << endl;
+      exit(0);
+  }
+  
+  return etype;
 }
 
 void ImpTypeChecker::visit(ForStatement* s) {
@@ -284,6 +270,8 @@ void ImpTypeChecker::visit(ForStatement* s) {
   s->fbody->accept(this);
   env.remove_level();
 }
+
+
 ImpType ImpTypeChecker::visit(BinaryExpression* e) {
   ImpType t1 = e->left->accept(this);
   ImpType t2 = e->right->accept(this);
@@ -314,6 +302,39 @@ ImpType ImpTypeChecker::visit(StringLiteral* e) {
   t.set_basic_type("String");
   sp_incr(1);
   return t;
+}
+
+
+ImpType ImpTypeChecker::visit(LiteralExpression* e){
+  ImpType t;
+  switch(e->type) {
+      case INTEGER_LITERAL:
+          t.set_basic_type("Int"); // Usar set_basic_type en lugar de asignación directa
+          break;
+      case LONG_LITERAL:
+          t.set_basic_type("Long");
+          break;
+      case BOOLEAN_LITERAL:
+          t.set_basic_type("Boolean");
+          break;
+      case CHARACTER_LITERAL:
+          cout << "Error: Caracteres no soportados" << endl;
+          exit(0);
+      default:
+          cout << "Error: tipo de literal no soportado" << endl;
+          exit(0);
+  }
+  sp_incr(1); // Incrementar el stack pointer
+  return t;
+}
+
+ImpType ImpTypeChecker::visit(IdentifierExpression* e) {
+  if (!env.check(e->identifier)) {
+      cout << "Error: variable " << e->identifier << " no definida" << endl;
+      exit(0);
+  }
+  sp_incr(1);
+  return env.lookup(e->identifier);
 }
 
 ImpType ImpTypeChecker::visit(FunctionCallExpression* e) {
