@@ -2,9 +2,10 @@
 #define PROYECTO_COMPI_TYPE_VISITOR_H
 
 #include "../exp.h"
-#include "imp_type.hh"
+#include "../interprete/imp_type.hh"
 
 class TypeVisitor {
+public:
     virtual void visit(KotlinFile* kf) = 0;
     virtual void visit(Block* b) = 0;
     
@@ -18,12 +19,13 @@ class TypeVisitor {
     virtual void visit(WhileStatement* e) = 0;
     virtual void visit(DeclarationStatement* e) = 0;
     virtual void visit(ForStatement* e) = 0;
-    virtual ImpValue visit(BinaryExpression* e) = 0;
-    virtual ImpValue visit(StringLiteral* e) = 0;
-    virtual ImpValue visit(LiteralExpression* e) = 0;
-    virtual ImpValue visit(IdentifierExpression* e) = 0;
-    virtual void visit(IfExpression* e) = 0;
-    virtual ImpValue visit(JumpExpression* e) = 0;
+    virtual ImpType visit(BinaryExpression* e) = 0;
+    virtual ImpType visit(StringLiteral* e) = 0;
+    virtual ImpType visit(LiteralExpression* e) = 0;
+    virtual ImpType visit(IdentifierExpression* e) = 0;
+    virtual ImpType visit(FunctionCallExpression* e) = 0;
+    virtual ImpType visit(IfExpression* e) = 0;
+    virtual ImpType visit(JumpExpression* e) = 0;
 
 };
 

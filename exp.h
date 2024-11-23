@@ -8,8 +8,10 @@
 #include <iostream>
 
 #pragma region Interprete_imports
+#include "visitor.h"
 #include "interprete/imp_value.hh"
 #include "interprete/imp_type.hh"
+#include "codegen/type_visitor.h"
 #pragma endregion Interprete_imports
 
 
@@ -36,7 +38,9 @@ public:
     void add(Declaration* decl);
     void print();
     // -------------------------------------------------------
+    void accept(Visitor* kf);
     void accept(ImpValueVisitor* kf);
+    void accept(TypeVisitor* kf);
     // -------------------------------------------------------
 };
 
@@ -45,7 +49,9 @@ class Declaration {
 public:
     virtual void print() = 0;
     // -------------------------------------------------------
+    virtual void accept(Visitor* v) = 0;
     virtual void accept(ImpValueVisitor* v) = 0;
+    virtual void accept(TypeVisitor* v) = 0;
     // -------------------------------------------------------
     virtual ~Declaration() = 0;
 };
@@ -57,7 +63,9 @@ public:
     string returnType;
     Block* fbody;
     // -------------------------------------------------------
+    void accept(Visitor* v);
     void accept(ImpValueVisitor* v);
+    void accept(TypeVisitor* v);
     // -------------------------------------------------------
     FunctionDeclaration(string id, list<FunctionValueParameter*> params, string rtype, Block* fbody);
     ~FunctionDeclaration();
@@ -70,7 +78,9 @@ public:
     VariableDeclaration* variable;
     Expression* expression;
     // -------------------------------------------------------
+    void accept(Visitor* v);
     void accept(ImpValueVisitor* v);
+    void accept(TypeVisitor* v);
     // -------------------------------------------------------
     PropertyDeclaration(string ptype, VariableDeclaration* var, Expression* expr);
     ~PropertyDeclaration();
@@ -106,7 +116,9 @@ class Block { // esto es un statementlist
 public:
     StatementList* slist;
     // -------------------------------------------------------
+    void accept(Visitor* v);
     void accept(ImpValueVisitor* v);
+    void accept(TypeVisitor* v);
     // -------------------------------------------------------
     Block(StatementList* stms);
     void print();
@@ -119,7 +131,9 @@ public:
     StatementList();
     void add(Statement* stmt);
     // -------------------------------------------------------
+    void accept(Visitor* v);
     void accept(ImpValueVisitor* v);
+    void accept(TypeVisitor* v);
     // -------------------------------------------------------
     void print();
     ~StatementList();
@@ -143,7 +157,9 @@ public:
 class Statement {
 public:
     // -------------------------------------------------------
+    virtual void accept(Visitor* v) = 0;
     virtual void accept(ImpValueVisitor* v) = 0;
+    virtual void accept(TypeVisitor* v) = 0;
     // -------------------------------------------------------
     virtual ~Statement() = 0;
     virtual void print() = 0;
@@ -154,7 +170,9 @@ public:
     Declaration* declaration;
     DeclarationStatement(Declaration* decl);
     // -------------------------------------------------------
+    void accept(Visitor* v);
     void accept(ImpValueVisitor* v);
+    void accept(TypeVisitor* v);
     // -------------------------------------------------------
     ~DeclarationStatement();
     void print();
@@ -166,7 +184,9 @@ public:
     Expression* expression;
     AssignmentStatement(string id, Expression* expr);
     // -------------------------------------------------------
+    void accept(Visitor* v);
     void accept(ImpValueVisitor* v);
+    void accept(TypeVisitor* v);
     // -------------------------------------------------------
     ~AssignmentStatement();
     void print();
@@ -179,7 +199,9 @@ public:
     Block* fbody;
     ForStatement(VariableDeclaration* var, Expression* expr, Block* fbody);
     // -------------------------------------------------------
+    void accept(Visitor* v);
     void accept(ImpValueVisitor* v);
+    void accept(TypeVisitor* v);
     // -------------------------------------------------------
     ~ForStatement();
     void print();
@@ -191,7 +213,9 @@ public:
     Block* wbody;
     WhileStatement(Expression* cond, Block* wbody);
     // -------------------------------------------------------
+    void accept(Visitor* v);
     void accept(ImpValueVisitor* v);
+    void accept(TypeVisitor* v);
     // -------------------------------------------------------
     ~WhileStatement();
     void print();
@@ -202,7 +226,9 @@ public:
     Expression* expression;
     ExpressionStatement(Expression* expr);
     // -------------------------------------------------------
+    void accept(Visitor* v);
     void accept(ImpValueVisitor* v);
+    void accept(TypeVisitor* v);
     // -------------------------------------------------------
     ~ExpressionStatement();
     void print();
@@ -213,7 +239,9 @@ public:
     Expression* expression;
     PrintlnStatement(Expression* expr);
     // -------------------------------------------------------
+    void accept(Visitor* v);
     void accept(ImpValueVisitor* v);
+    void accept(TypeVisitor* v);
     // -------------------------------------------------------
     ~PrintlnStatement();
     void print();
@@ -241,7 +269,9 @@ enum BinaryOp {
 class Expression {
 public:
     // -------------------------------------------------------
+    virtual int accept(Visitor* v) = 0;
     virtual ImpValue accept(ImpValueVisitor* v) = 0;
+    virtual ImpType accept(TypeVisitor* v) = 0;
     // -------------------------------------------------------
     virtual ~Expression() = 0;
     virtual void print() = 0;
@@ -255,7 +285,9 @@ public:
     BinaryOp op;
     BinaryExpression(Expression* lhs, Expression* rhs, BinaryOp op);
     // -------------------------------------------------------
+    int accept(Visitor* v);
     ImpValue accept(ImpValueVisitor* v);
+    ImpType accept(TypeVisitor* v);
     // -------------------------------------------------------
     ~BinaryExpression();
     void print();
@@ -266,7 +298,9 @@ public:
     string identifier;
     IdentifierExpression(string id);
     // -------------------------------------------------------
+    int accept(Visitor* v);
     ImpValue accept(ImpValueVisitor* v);
+    ImpType accept(TypeVisitor* v);
     // -------------------------------------------------------
     ~IdentifierExpression();
     void print();
@@ -278,7 +312,9 @@ public:
     list<Expression*> arguments;
     FunctionCallExpression(string id, list<Expression*> args);
     // -------------------------------------------------------
+    int accept(Visitor* v);
     ImpValue accept(ImpValueVisitor* v);
+    ImpType accept(TypeVisitor* v);
     // -------------------------------------------------------
     ~FunctionCallExpression();
     void print();
@@ -291,8 +327,9 @@ public:
     Block* elseBody;
     IfExpression(Expression* cond, Block* thenBody, Block* elseBody);
     // -------------------------------------------------------
-    // void accept2(ImpValueVisitor* v);
+    int accept(Visitor* v);
     ImpValue accept(ImpValueVisitor* v);
+    ImpType accept(TypeVisitor* v);
     // -------------------------------------------------------
     ~IfExpression();
     void print();
@@ -303,7 +340,9 @@ public:
     Expression* returnExpression;
     JumpExpression(Expression* ret);
     // -------------------------------------------------------
+    int accept(Visitor* v);
     ImpValue accept(ImpValueVisitor* v);
+    ImpType accept(TypeVisitor* v);
     // -------------------------------------------------------
     ~JumpExpression();
     void print();
@@ -317,7 +356,9 @@ public:
     string value;
     LiteralExpression(LiteralType type, string value);
     // -------------------------------------------------------
+    int accept(Visitor* v);
     ImpValue accept(ImpValueVisitor* v);
+    ImpType accept(TypeVisitor* v);
     // -------------------------------------------------------
     ~LiteralExpression();
     void print();
@@ -328,7 +369,9 @@ public:
     string value;
     StringLiteral(string value);
     // -------------------------------------------------------
+    int accept(Visitor* v);
     ImpValue accept(ImpValueVisitor* v);
+    ImpType accept(TypeVisitor* v);
     // -------------------------------------------------------
     ~StringLiteral();
     void print();

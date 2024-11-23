@@ -1,5 +1,83 @@
 #include "imp_interpreter.hh"
 
+
+ImpType BinaryExpression::accept(TypeVisitor* e) {
+    return e->visit(this);
+}
+
+ImpType IdentifierExpression::accept(TypeVisitor* v) {
+    return v->visit(this);
+}
+
+ImpType FunctionCallExpression::accept(TypeVisitor* v) {
+    return v->visit(this);
+}
+
+// void IfExpression::accept2(TypeVisitor* v) {
+//     return v->visit(this);
+// }
+
+ImpType IfExpression::accept(TypeVisitor* v) {
+    return v->visit(this);
+}
+
+ImpType StringLiteral::accept(TypeVisitor* v) {
+    return v->visit(this);
+}
+
+ImpType JumpExpression::accept(TypeVisitor* v) {
+    return v->visit(this);
+}
+
+ImpType LiteralExpression::accept(TypeVisitor* v) {
+    return v->visit(this);
+}
+
+void AssignmentStatement::accept(TypeVisitor* v) {
+    return v->visit(this);
+}
+
+void PrintlnStatement::accept(TypeVisitor* v) {
+    return v->visit(this);
+}
+
+void ExpressionStatement::accept(TypeVisitor* v) {
+    return v->visit(this);
+}
+
+void WhileStatement::accept(TypeVisitor* v) {
+    return v->visit(this);
+}
+
+void DeclarationStatement::accept(TypeVisitor* v) {
+    return v->visit(this);
+}
+
+void ForStatement::accept(TypeVisitor* v) {
+    return v->visit(this);
+}
+
+void StatementList::accept(TypeVisitor* v) {
+    return v->visit(this);
+}
+
+void FunctionDeclaration::accept(TypeVisitor* v) {
+    return v->visit(this);
+}
+
+void PropertyDeclaration::accept(TypeVisitor* v) {
+    return v->visit(this);
+}
+
+void Block::accept(TypeVisitor* v) {
+    return v->visit(this);
+}
+
+void KotlinFile::accept(TypeVisitor* v) {
+    return v->visit(this);
+}
+
+//==============================================================================
 // Funciones accept de las clases del AST
 
 ImpValue BinaryExpression::accept(ImpValueVisitor* v) {
@@ -77,6 +155,8 @@ void Block::accept(ImpValueVisitor* v) {
 void KotlinFile::accept(ImpValueVisitor* v) {
     return v->visit(this);
 }
+
+//==============================================================================
 
 // Funciones visit de ImpInterpreter
 

@@ -3,8 +3,11 @@
 #include <string>
 #include "scanner.h"
 #include "parser.h"
+// #include "visitor.h"
 #include "interprete/imp_interpreter.hh"
 #include "interprete/imp_type.hh"
+// #include "codegen/imp_type_checker.hh"
+// #include "codegen/imp_codegen.hh"
 
 
 using namespace std;
@@ -46,6 +49,11 @@ int main(int argc, const char* argv[]) {
         ImpInterpreter interpreter;
 
         interpreter.interpret(kotlinFile);
+
+        // ImpTypeChecker typeChecker;
+
+
+        // ImpCodeGen codegen(&typeChecker);
     }
     catch (const std::runtime_error& e) {
         cout << e.what() << endl;
