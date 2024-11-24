@@ -27,9 +27,7 @@ class TypeVisitor {
 public:
     virtual void visit(KotlinFile* kf) = 0;
     virtual void visit(Block* b) = 0;
-    
     virtual void visit(FunctionDeclaration*e) = 0;
-
     virtual void visit(PropertyDeclaration* e) = 0;
     virtual void visit(StatementList* e) = 0;
     virtual void visit(AssignmentStatement* e) = 0;

@@ -23,24 +23,25 @@ class ImpCodeGen : public Visitor {
 public:
   ImpCodeGen(ImpTypeChecker*);
   void codegen(KotlinFile*, string outfname);
-  virtual void visit(KotlinFile* kf);
-  virtual void visit(Block* b);
-  virtual void visit(FunctionDeclaration*fd);
-  virtual void visit(PropertyDeclaration* e);
-  virtual void visit(StatementList* e);
-  virtual void visit(AssignmentStatement* e);
-  virtual void visit(PrintlnStatement* e);
-  virtual void visit(ExpressionStatement* e);
-  virtual void visit(WhileStatement* e);
-  virtual void visit(DeclarationStatement* e);
-  virtual void visit(ForStatement* e);
-  virtual int visit(BinaryExpression* e);
-  virtual int visit(StringLiteral* e);
-  virtual int visit(LiteralExpression* e);
-  virtual int visit(IdentifierExpression* e);
-  virtual int visit(FunctionCallExpression* e);
-  virtual int visit(IfExpression* e);
-  virtual int visit(JumpExpression* e);
+  void visit(Block* b);
+  void visit(KotlinFile* kf);
+  void visit(FunctionDeclaration*fd);
+  void visit(PropertyDeclaration* e);
+  void visit(StatementList* e);
+  void visit(AssignmentStatement* e);
+  void visit(PrintlnStatement* e);
+  void visit(ExpressionStatement* e);
+  void visit(WhileStatement* e);
+  void visit(DeclarationStatement* e);
+  void visit(ForStatement* e);
+
+  int visit(BinaryExpression* e);
+  int visit(StringLiteral* e);
+  int visit(LiteralExpression* e);
+  int visit(IdentifierExpression* e);
+  int visit(FunctionCallExpression* e);
+  int visit(IfExpression* e);
+  int visit(JumpExpression* e);
 
 private:
   ImpTypeChecker* analysis;

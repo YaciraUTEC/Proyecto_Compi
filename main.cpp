@@ -3,11 +3,11 @@
 #include <string>
 #include "scanner.h"
 #include "parser.h"
-// #include "visitor.h"
+#include "visitor.h"
 #include "interprete/imp_interpreter.hh"
 #include "interprete/imp_type.hh"
 #include "codegen/imp_type_checker.hh"
-// #include "codegen/imp_codegen.hh"
+#include "codegen/imp_codegen.hh"
 
 
 using namespace std;
@@ -42,21 +42,27 @@ int main(int argc, const char* argv[]) {
     Parser parser(&scanner);
     try {
         KotlinFile* kotlinFile = parser.parseKotlinFile();
+        ImpInterpreter interpreter;
+        ImpTypeChecker typeChecker;
+        ImpCodeGen codegen(&typeChecker);
+
         cout << "parsing exitoso" << endl;
         kotlinFile->print();
         cout << "printing exitoso" << endl;
-        cout << "Interpretando..." << endl;
-        ImpInterpreter interpreter;
-
-        interpreter.interpret(kotlinFile);
-
-        ImpTypeChecker typeChecker;
 
         cout << "TypeChecker:" << endl;
         typeChecker.typecheck(kotlinFile);
 
+        cout << "Interpretando..." << endl;
+        interpreter.interpret(kotlinFile);
 
-        // ImpCodeGen codegen(&typeChecker);
+        cout << "Generando código..." << endl;
+        string filename = argv[1];
+        codegen.codegen(kotlinFile, filename + ".sm");
+        cout << "Código generado exitosamente" << endl;
+
+        delete kotlinFile;
+
     }
     catch (const std::runtime_error& e) {
         cout << e.what() << endl;

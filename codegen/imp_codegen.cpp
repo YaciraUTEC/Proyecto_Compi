@@ -49,292 +49,311 @@ void ImpCodeGen::codegen(KotlinFile* p, string outfname) {
 }
 
 void ImpCodeGen::visit(KotlinFile* p) {
-  // current_dir = 0;  
-  // direcciones.add_level();
-  // process_global = true;
-  // p->vardecs->accept(this);
-  // process_global = false;
-  // mem_globals = current_dir;
-  // // codegen
-  // codegen("start","skip");
-  // codegen(nolabel,"enter",mem_globals);
-  // codegen(nolabel,"alloc",mem_globals);
-  // codegen(nolabel,"mark");
-  // codegen(nolabel,"pusha",get_flabel("main"));
-  // codegen(nolabel,"call");
-  // codegen(nolabel,"halt");
-  // p->fundecs->accept(this);
-  // direcciones.remove_level();
-  return ;
+    current_dir = 0;  
+    direcciones.add_level();
+    process_global = true;
+
+    // Generar código inicial
+    codegen("start", "skip");
+    
+    // Procesar declaraciones globales para contar variables
+    for(auto d : p->decl) {
+        d->accept(this);
+    }
+    
+    // Actualizar espacio para variables globales
+    mem_globals = current_dir;
+    codegen(nolabel, "enter", mem_globals + 1); // +1 para el frame base
+    codegen(nolabel, "alloc", mem_globals);
+    
+    process_global = false;
+
+    // Llamar a main
+    codegen(nolabel, "mark");
+    codegen(nolabel, "pusha", get_flabel("main"));
+    codegen(nolabel, "call");
+    codegen(nolabel, "halt");
+    
+    direcciones.remove_level();
 }
 
-void ImpCodeGen::visit(Block * b) {
-//   int dir = current_dir;
-//   direcciones.add_level();
+void ImpCodeGen::visit(Block* b) {
+  direcciones.add_level();
+  int saved_dir = current_dir;
   
-//   b->vardecs->accept(this);
-//   b->slist->accept(this);
+  b->slist->accept(this);
   
-//   direcciones.remove_level();
-
-//   current_dir = dir;
-//   return ;
+  current_dir = saved_dir;
+  direcciones.remove_level();
 }
 
 void ImpCodeGen::visit(PropertyDeclaration* s) {
-//   list<VarDec*>::iterator it;
-//   for (it = s->vardecs.begin(); it != s->vardecs.end(); ++it) {
-//     (*it)->accept(this);
-//   }  
-//   return;
+    current_dir++;
+    VarEntry ventry;
+    ventry.dir = current_dir;
+    ventry.is_global = process_global;
+    direcciones.add_var(s->variable->identifier, ventry);
+    
+    if (s->expression != nullptr) {
+        s->expression->accept(this);
+        if (ventry.is_global) {
+            codegen(nolabel, "store", ventry.dir);
+        } else {
+            codegen(nolabel, "storer", ventry.dir);
+        }
+    }
 }
 
 void ImpCodeGen::visit(ExpressionStatement* vd) {
-//   list<string>::iterator it;
-//   for (it = vd->vars.begin(); it != vd->vars.end(); ++it){
-//     current_dir++;
-//     VarEntry ventry;
-//     ventry.dir = current_dir;
-//     ventry.is_global = process_global;
-//     direcciones.add_var(*it, ventry);
-//   }
-//   return ;
+  // Si hay una expresión, evaluarla
+  if (vd->expression != nullptr) {
+      // La expresión podría ser una llamada a función o cualquier otra expresión
+      vd->expression->accept(this);
+      
+      // Como es un statement, descartamos el resultado si lo hubiera
+      // (por ejemplo, si es una llamada a función que retorna valor)
+      codegen(nolabel, "pop");
+  }
 }
 
-void ImpCodeGen::visit(FunctionDeclaration* s) {
-//   list<FunDec*>::iterator it;
-//   for (it = s->flist.begin(); it != s->flist.end(); ++it) {
-//     (*it)->accept(this);
-//   }
-//   return ;
+void ImpCodeGen::visit(FunctionDeclaration* fd) {
+    FEntry fentry = analysis->ftable.lookup(fd->identifier);
+    
+    current_dir = 0;
+    direcciones.add_level();
+    
+    // Generar etiqueta de función
+    codegen(get_flabel(fd->identifier), "skip");
+    
+    // Calcular tamaño del frame incluyendo espacio para variables locales
+    int frame_size = fd->parameters.size() + 3; // +3 para fp, ep y pc
+    codegen(nolabel, "enter", frame_size);
+    
+    // Reservar espacio para variables locales
+    codegen(nolabel, "alloc", fentry.mem_locals);
+    
+    // Procesar parámetros
+    int param_count = 0;
+    for(auto param : fd->parameters) {
+        VarEntry ventry;
+        ventry.is_global = false;
+        ventry.dir = param_count + 1; // Dirección relativa positiva
+        direcciones.add_var(param->parameter->identifier, ventry);
+        param_count++;
+    }
+    
+    // Procesar cuerpo
+    fd->fbody->accept(this);
+    
+    // Return implícito para Unit
+    if(fd->returnType == "Unit") {
+        codegen(nolabel, "return", fd->parameters.size() + 3);
+    }
+    
+    direcciones.remove_level();
 }
 
 void ImpCodeGen::visit(DeclarationStatement* fd) {
-//   FEntry fentry = analysis->ftable.lookup(fd->fname);
-//   current_dir = 0;
-//   list<string>::iterator it, vit;
-//   // Parameters
-//   int i = 1;
-//   int m = fd->types.size();
-//   VarEntry ventry;
-//   for (it = fd->types.begin(), vit = fd->vars.begin();
-//        it != fd->types.end(); ++it, ++vit){
-//     ventry.is_global = false;
-//     ventry.dir = i-(m+3);
-//     direcciones.add_var(*vit,ventry);
-//     i++;
-//     // cout << *it << " " << *vit;
-//   }
-//   ImpType ftype = fentry.ftype;
-//   if (ftype.types[ftype.types.size()-1] != ImpType::VOID) {
-//     ventry.dir = -(m+3);
-//     direcciones.add_var("return", ventry);
-//   }
+    // Procesar la declaración contenida
+    if (fd->declaration != nullptr) {
+        // Delegar el procesamiento a la visita específica del tipo de declaración
+        fd->declaration->accept(this);
+    }
 
-//   codegen(get_flabel(fd->fname),"skip");
-//   codegen(nolabel,"enter",fentry.mem_locals+fentry.max_stack);
-//   codegen(nolabel,"alloc",fentry.mem_locals);
-
-//   num_params = m;
-//   fd->body->accept(this);
-
-//   return ;
+    // Actualizar el número de parámetros si es necesario
+    if (auto funcDecl = dynamic_cast<FunctionDeclaration*>(fd->declaration)) {
+        num_params = funcDecl->parameters.size();
+    }
 }
 
-
 void ImpCodeGen::visit(StatementList* s) {
-//   list<Stm*>::iterator it;
-//   for (it = s->stms.begin(); it != s->stms.end(); ++it) {
-//     (*it)->accept(this);
-//   }
-//   return ;
+  // Procesar cada statement en la lista
+  for (auto stmt : s->statements) {
+      stmt->accept(this);
+  }
 }
 
 void ImpCodeGen::visit(AssignmentStatement* s) {
-//   s->rhs->accept(this);
-//   VarEntry ventry = direcciones.lookup(s->id);
-//   if (ventry.is_global)
-//     codegen(nolabel,"store", ventry.dir);
-//   else
-//     codegen(nolabel,"storer", ventry.dir);
-//   return ;
+    s->expression->accept(this);
+    VarEntry ventry = direcciones.lookup(s->identifier);
+    
+    if (ventry.is_global) {
+        codegen(nolabel, "store", ventry.dir);
+    } else {
+        codegen(nolabel, "storer", ventry.dir);
+    }
 }
 
 void ImpCodeGen::visit(PrintlnStatement* s) {
-//   s->e->accept(this);
-//   code << "print" << endl;;
-//   return ;
+  s->expression->accept(this);
+  codegen(nolabel, "print");
 }
 
 int ImpCodeGen::visit(IfExpression* s) {
-//   string l1 = next_label();
-//   string l2 = next_label();
-  
-//   s->condition->accept(this);
-//   codegen(nolabel,"jmpz",l1);
-//   s->then->accept(this);
-//   codegen(nolabel,"goto",l2);
-//   codegen(l1,"skip");
-//   if (s->els!=NULL) {
-//     s->els->accept(this);
-//   }
-//   codegen(l2,"skip");
-
-  return 0;
+    string else_label = next_label();
+    string end_label = next_label();
+    
+    // Evaluar condición
+    s->condition->accept(this);
+    codegen(nolabel, "jmpz", else_label);
+    
+    // Cuerpo del then
+    if (s->thenBody != nullptr) {
+        s->thenBody->accept(this);
+    }
+    codegen(nolabel, "goto", end_label);
+    
+    // Cuerpo del else
+    codegen(else_label, "skip");
+    if (s->elseBody != nullptr) {
+        s->elseBody->accept(this);
+    }
+    
+    codegen(end_label, "skip");
+    return 0;
 }
 
 void ImpCodeGen::visit(WhileStatement* s) {
-//   string l1 = next_label();
-//   string l2 = next_label();
-
-//   codegen(l1,"skip");
-//   s->condition->accept(this);
-//   codegen(nolabel,"jmpz",l2);
-//   s->b->accept(this);
-//   codegen(nolabel,"goto",l1);
-//   codegen(l2,"skip");
-
-//   return ;
+  string start_label = next_label();
+  string end_label = next_label();
+  
+  codegen(start_label, "skip");
+  s->condition->accept(this);
+  codegen(nolabel, "jmpz", end_label);
+  
+  s->wbody->accept(this);
+  codegen(nolabel, "goto", start_label);
+  
+  codegen(end_label, "skip");
 }
 
 int ImpCodeGen::visit(JumpExpression* s) {
-//   //nuevo
-//   if (s->e != NULL) {
-//     VarEntry ventry = direcciones.lookup("return");
-//     s->e->accept(this);
-//     codegen(nolabel,"storer", ventry.dir);
-//   }
-//   codegen(nolabel,"return",num_params+3);  // fp-m-3
+  // Manejar return expressions
+  if (s->returnExpression != nullptr) {
+      s->returnExpression->accept(this);
+  }
+  codegen(nolabel, "return", num_params + 3);
   return 0;
 }
 
 void ImpCodeGen::visit(ForStatement* s) {
-
-//     string l1 = next_label();
-//     string l2 = next_label();
-//     string l3 = next_label();
-
-//     //alloc 1
-//     codegen(nolabel, "alloc", 1);
-//     current_dir++;
-
-//     // Inicializar el contador
-//     s->start->accept(this); 
-//     codegen(nolabel, "storer", current_dir);
-
-//     codegen(l1, "skip");
-
-//     // Evaluar la condición
-//     codegen(nolabel, "loadr", current_dir);
-//     s->end->accept(this);
-//     codegen(nolabel, "sub");
-//     codegen(nolabel, "jmpz", l2);
-
-//     // Ejecutar el cuerpo del bucle
-//     s->b->accept(this);
-
-//     // Incrementar el contador
-//     codegen(nolabel, "loadr", current_dir);
-//     s->step->accept(this); 
-//     codegen(nolabel, "add");
-//     codegen(nolabel, "storer", current_dir);
-
-//     codegen(nolabel, "goto", l1);
-//     codegen(l2, "skip");
-
-//   return ;
+  string start_label = next_label();
+  string end_label = next_label();
+  
+  // Reservar espacio para la variable del loop
+  current_dir++;
+  VarEntry ventry;
+  ventry.dir = current_dir;
+  ventry.is_global = false;
+  direcciones.add_var(s->variable->identifier, ventry);
+  
+  // Obtener rango (start..end)
+  BinaryExpression* range = dynamic_cast<BinaryExpression*>(s->expression);
+  if (range && range->op == RANGE_OP) {
+      // Inicializar contador
+      range->left->accept(this);
+      codegen(nolabel, "storer", ventry.dir);
+      
+      // Inicio del loop
+      codegen(start_label, "skip");
+      
+      // Cargar contador y comparar con fin
+      codegen(nolabel, "loadr", ventry.dir);
+      range->right->accept(this);
+      codegen(nolabel, "gt");
+      codegen(nolabel, "jmpz", end_label);
+      
+      // Ejecutar cuerpo
+      s->fbody->accept(this);
+      
+      // Incrementar contador
+      codegen(nolabel, "loadr", ventry.dir);
+      codegen(nolabel, "push", "1");
+      codegen(nolabel, "add");
+      codegen(nolabel, "storer", ventry.dir);
+      
+      // Volver al inicio
+      codegen(nolabel, "goto", start_label);
+      codegen(end_label, "skip");
+  }
 }
 
 int ImpCodeGen::visit(BinaryExpression* e) {
-//   e->left->accept(this);
-//   e->right->accept(this);
-//   string op = "";
-//   switch(e->op) {
-//   case PLUS_OP: op =  "add"; break;
-//   case MINUS_OP: op = "sub"; break;
-//   case MUL_OP:  op = "mul"; break;
-//   case DIV_OP:  op = "div"; break;
-//   case LT_OP:  op = "lt"; break;
-//   case LE_OP: op = "le"; break;
-//   case EQ_OP:  op = "eq"; break;
-//   default: cout << "binop " << Exp::binopToChar(e->op) << " not implemented" << endl;
-//   }
-//   codegen(nolabel, op);
+  e->left->accept(this);
+  e->right->accept(this);
+  
+  string op;
+  switch(e->op) {
+      case ADD_OP: op = "add"; break;
+      case SUB_OP: op = "sub"; break;
+      case MUL_OP: op = "mul"; break;
+      case DIV_OP: op = "div"; break;
+      case LT_OP:  op = "lt"; break;
+      case GT_OP:  op = "gt"; break;
+      case LE_OP:  op = "le"; break;
+      case GE_OP:  op = "ge"; break;
+      case EQ_OP:  op = "eq"; break;
+      case NE_OP:  op = "ne"; break;
+      case AND_OP: op = "and"; break;
+      case OR_OP:  op = "or"; break;
+      default:
+          cout << "Operador no soportado" << endl;
+          exit(1);
+  }
+  codegen(nolabel, op);
   return 0;
 }
 
 int ImpCodeGen::visit(StringLiteral* e) {
 
+return 0;
 }
 
 int ImpCodeGen::visit(LiteralExpression* e) {
-
+  switch(e->type) {
+    case INTEGER_LITERAL:
+    case LONG_LITERAL:
+        codegen(nolabel, "push", e->value);
+        break;
+    case BOOLEAN_LITERAL:
+        codegen(nolabel, "push", (e->value == "true") ? "1" : "0");
+        break;
+    default:
+        cout << "Tipo de literal no soportado" << endl;
+        exit(1);
+  }
+  return 0;
 }
 
-// int ImpCodeGen::visit(NumberExp* e) {
-//   codegen(nolabel,"push ",e->value);
-//   return 0;
-// }
-
-// int ImpCodeGen::visit(BoolExp* e) {
-//   codegen(nolabel,"push",e->value?1:0);
- 
-//   return 0;
-// }
 
 int ImpCodeGen::visit(IdentifierExpression* e) {
-//   VarEntry ventry = direcciones.lookup(e->name);
-//   if (ventry.is_global)
-//     codegen(nolabel,"load",ventry.dir);
-//   else
-//     codegen(nolabel,"loadr",ventry.dir);
-  return 0;
+    VarEntry ventry = direcciones.lookup(e->identifier);
+    if (ventry.is_global) {
+        codegen(nolabel, "load", ventry.dir);
+    } else {
+        codegen(nolabel, "loadr", ventry.dir);
+    }
+    return 0;
 }
-
-// int ImpCodeGen::visit(IFExp* e) {
-//   string l1 = next_label();
-//   string l2 = next_label();
- 
-//   e->cond->accept(this);
-//   codegen(nolabel, "jmpz", l1);
-//   e->left->accept(this);
-//   codegen(nolabel, "goto", l2);
-//   codegen(l1,"skip");
-//   e->right->accept(this);
-//   codegen(l2, "skip");
-//   return 0;
-// }
 
 int ImpCodeGen::visit(FunctionCallExpression* e) {
-//   // nuevo
-//   FEntry fentry = analysis->ftable.lookup(e->fname);
-//   ImpType ftype = fentry.ftype;
-//   if (ftype.types[ftype.types.size()-1] != ImpType::VOID) {
-//     codegen(nolabel,"alloc",1);
-//   }
-//   list<Exp*>::iterator it;
-//   for (it = e->args.begin(); it != e->args.end(); ++it) {
-//     (*it)->accept(this);
-//   }
-//   codegen(nolabel,"mark");
-//   codegen(nolabel,"pusha",get_flabel(e->fname));
-//   codegen(nolabel,"call");
+  // Obtener información de la función
+  // FEntry fentry = analysis->ftable.lookup(e->identifier);
+  
+  // // Reservar espacio para valor de retorno si no es Unit
+  // if (!fentry.ftype.match(analysis->unittype)) {
+  //     codegen(nolabel, "alloc", 1);
+  // }
+  
+  // // Evaluar y apilar argumentos
+  // for (auto arg : e->arguments) {
+  //     arg->accept(this);
+  // }
+  
+  // // Llamar a la función
+  // codegen(nolabel, "mark");
+  // codegen(nolabel, "pusha", get_flabel(e->identifier));
+  // codegen(nolabel, "call");
+  
   return 0;
 }
-
-// void ImpCodeGen::visit(FCallStatement* s) {
-//   // nuevo
-//   FEntry fentry = analysis->ftable.lookup(s->fname);
-//   ImpType ftype = fentry.ftype;
-//   if (ftype.types[ftype.types.size()-1] != ImpType::VOID) {
-//     codegen(nolabel,"alloc",1);
-//   }
-//   list<Exp*>::iterator it;
-//   for (it = s->args.begin(); it != s->args.end(); ++it) {
-//     (*it)->accept(this);
-//   }
-//   codegen(nolabel,"mark");
-//   codegen(nolabel,"pusha",get_flabel(s->fname));
-//   codegen(nolabel,"call");
-//   return ;
-// }
