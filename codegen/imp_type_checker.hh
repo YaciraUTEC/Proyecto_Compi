@@ -41,6 +41,7 @@ public:
   void typecheck(KotlinFile*);
 
   void visit(KotlinFile* kf);
+  void visit(Declaration* d);
   void visit(Block* b);
   void visit(FunctionDeclaration*fd);
   void visit(PropertyDeclaration* e);

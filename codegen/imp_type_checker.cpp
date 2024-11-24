@@ -101,7 +101,6 @@ void ImpTypeChecker::visit(FunctionDeclaration* fd) {
         
         fd->returnType = "Unit";
         
-        cout << "5D: "   << funtype << endl;
         if (!funtype.set_fun_type(list<string>(), "Unit")) {
             cout << "Error al crear tipo de función main" << endl;
             exit(0);
