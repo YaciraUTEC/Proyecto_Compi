@@ -1,14 +1,10 @@
 fun main() {
-    var x: Int
+    var a: Int
+    var b: Int
 
-    x = 1
-
-    var z = 0
-    while (z < 13) {
-        x = x + 1
-        println(x)
-        z = z + 1
+    a = 10
+    while (0 < a) {
+        println(a)
+        a = a - 1
     }
-    
-    println(x)
 }

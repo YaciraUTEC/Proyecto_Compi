@@ -1,12 +1,11 @@
 fun main() {
-    var x: Int
+    var a: Int
+    var b: Int
 
-    x = 1
+    a = 0
     
-    for (i in 1..3) {
-        x = x + 1
-        println(i)
+    for (i in 0..9) {
+        a = a + 2
+        println(a)
     }
-    
-    println(x)
 }

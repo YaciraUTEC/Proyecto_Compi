@@ -1,14 +1,16 @@
-fun suma(a: Long, b: Long): Long {
-    return a + b
+fun suma(a: Int, b: Int, c: Int): Int {
+    return a + b + c
 }
 
 fun main() {
-    var x: Long
-    var y: Long
+    var x: Int
+    var y: Int
+    var z: Int
 
-    x = 300000000
-    y = 200000000
-    
-    println(suma(x, y))
+    x = 3
+    y = 2
+    z = 1
+
+    println(suma(x, y, z))
 
 }

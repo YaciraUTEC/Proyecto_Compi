@@ -89,11 +89,14 @@ void ImpTypeChecker::visit(FunctionDeclaration* fd) {
     ImpType funtype;
     list<string> paramTypes;
     
+    // Recolectar tipos de parámetros
     for (auto p : fd->parameters) {
         paramTypes.push_back(p->parameter->type);
     }
     
+    // Verificar si es main
     if (fd->identifier == "main") {
+        // Verificar que main no tenga parámetros
         if (!paramTypes.empty()) {
             cout << "Error: main no debe tener parámetros" << endl;
             exit(0);
@@ -107,16 +110,22 @@ void ImpTypeChecker::visit(FunctionDeclaration* fd) {
         }
         has_main = true;
     } else {
-        // Para otras funciones usar los tipos normalmente
+        // Para otras funciones
+        if (fd->returnType.empty()) {
+            fd->returnType = "Unit";
+        }
+
         if (!funtype.set_fun_type(paramTypes, fd->returnType)) {
             cout << "Error al crear tipo de función" << endl;
             exit(0);
         }
     }
     
+    // Agregar función al ambiente
     env.add_var(fd->identifier, funtype);
     env.add_level();
 
+    // Agregar parámetros al ambiente
     for (auto p : fd->parameters) {
         ImpType ptype;
         if (!ptype.set_basic_type(p->parameter->type)) {
@@ -126,8 +135,12 @@ void ImpTypeChecker::visit(FunctionDeclaration* fd) {
         env.add_var(p->parameter->identifier, ptype);
     }
 
-    env.add_var("return", funtype);
+    // Agregar tipo de retorno al ambiente
+    ImpType returnType;
+    returnType.set_basic_type(fd->returnType);
+    env.add_var("return", returnType);  // Usar tipo de retorno específico
     
+    // Verificar cuerpo de la función
     fd->fbody->accept(this);
     
     // Crear entrada en la tabla de funciones
@@ -194,13 +207,15 @@ ImpType ImpTypeChecker::visit(JumpExpression* s) {
     
     if (s->returnExpression != nullptr) {
         etype = s->returnExpression->accept(this);
-        sp_decr(1);
+        // sp_decr(1);
     } else {
         etype.set_basic_type("Unit");
     }
     
-    if (!rtype.match(etype)) {
+    // Verificar que el tipo de retorno coincida
+    if (!etype.match(rtype)) {
         cout << "Error: tipo de retorno no coincide" << endl;
+        cout << "Esperado: " << rtype << ", Encontrado: " << etype << endl;
         exit(0);
     }
     
@@ -237,23 +252,33 @@ ImpType ImpTypeChecker::visit(IdentifierExpression* e) {
 }
 
 ImpType ImpTypeChecker::visit(IfExpression* s) {
-  ImpType cond_type = s->condition->accept(this);
-  if (!cond_type.match(booltype)) {
-      cout << "Error: condición de if debe ser booleana" << endl;
-      exit(0);
-  }
-  sp_decr(1);
-  
-  if (s->thenBody != nullptr) {
-      s->thenBody->accept(this);
-  }
-  if (s->elseBody != nullptr) {
-      s->elseBody->accept(this);
-  }
-  
-  ImpType t;
-  t.set_basic_type("Unit");
-  return t;
+    // Evaluar y verificar la condición
+    ImpType cond_type = s->condition->accept(this);
+    if (!cond_type.match(booltype)) {
+        cout << "Error: condición de if debe ser booleana" << endl;
+        exit(0);
+    }
+    // sp_decr(1);  // Decrementar después de usar la condición
+    
+    // Agregar nuevo nivel de ambiente
+    env.add_level();
+    
+    // Verificar los bloques then y else
+    if (s->thenBody != nullptr) {
+        s->thenBody->accept(this);
+    }
+    
+    if (s->elseBody != nullptr) {
+        s->elseBody->accept(this);
+    }
+    
+    // Remover nivel de ambiente
+    env.remove_level();
+    
+    // Retornar tipo Unit para la expresión if
+    ImpType result;
+    result.set_basic_type("Unit");
+    return result;
 }
 
 
@@ -268,21 +293,43 @@ void ImpTypeChecker::visit(WhileStatement* s) {
 }
 
 void ImpTypeChecker::visit(ForStatement* s) {
-  env.add_level();
-  ImpType var_type;
-  var_type.set_basic_type(s->variable->type);
-  env.add_var(s->variable->identifier, var_type);
-  
-  ImpType range_type = s->expression->accept(this);
-  if (!range_type.match(inttype)) {
-      cout << "Error: expresión de rango debe ser entera" << endl;
-      exit(0);
-  }
-  sp_decr(1);
-  
-  s->fbody->accept(this);
-  env.remove_level();
+    env.add_level();
+    
+    // Verificar el tipo de la variable del for
+    ImpType var_type;
+    var_type.set_basic_type(s->variable->type);
+    env.add_var(s->variable->identifier, var_type);
+    
+    // Verificar que la expresión del rango sea una BinaryExpression con RANGE_OP
+    BinaryExpression* rangeExp = dynamic_cast<BinaryExpression*>(s->expression);
+    if (!rangeExp || rangeExp->op != RANGE_OP) {
+        cout << "Error: Se esperaba una expresión de rango (..)" << endl;
+        exit(0);
+    }
+    
+    // Verificar el tipo de la expresión inicial del rango
+    ImpType start_type = rangeExp->left->accept(this);
+    if (!start_type.match(inttype)) {
+        cout << "Error: expresión de rango debe ser entera" << endl;
+        exit(0);
+    }
+    sp_decr(1);
+    
+    // Verificar el tipo de la expresión final del rango
+    ImpType end_type = rangeExp->right->accept(this);
+    if (!end_type.match(inttype)) {
+        cout << "Error: expresión de rango debe ser entera" << endl;
+        exit(0);
+    }
+    sp_decr(1);
+    
+    // Verificar el cuerpo del for
+    s->fbody->accept(this);
+    
+    env.remove_level();
 }
+
+
 ImpType ImpTypeChecker::visit(BinaryExpression* e) {
   ImpType t1 = e->left->accept(this);
   ImpType t2 = e->right->accept(this);
