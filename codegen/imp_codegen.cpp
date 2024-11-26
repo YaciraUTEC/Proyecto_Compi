@@ -115,7 +115,7 @@ void ImpCodeGen::visit(FunctionDeclaration* fd) {
   
     codegen(get_flabel(fd->identifier), "skip");
     
-    int param_offset = -3;  // Empezar en -3 para los parámetros
+    int param_offset = -3;
     for (auto param : fd->parameters) {
         VarEntry ventry;
         ventry.dir = param_offset--;
@@ -123,13 +123,17 @@ void ImpCodeGen::visit(FunctionDeclaration* fd) {
         direcciones.add_var(param->parameter->identifier, ventry);
     }
     
-    // Tamaño del frame = 2 (para ep y fp) + parámetros
     int frame_size = 2;  
     codegen(nolabel, "enter", frame_size + fentry.mem_locals + fentry.max_stack);
     codegen(nolabel, "alloc", fentry.mem_locals);
     
     fd->fbody->accept(this);
     
+    if (fd->identifier == "main") {
+        codegen(nolabel, "return", 3);
+    } else {
+        codegen(nolabel, "return", num_params + 3);
+    }
     process_global = prev_process_global;
     direcciones.remove_level();
 }
@@ -211,37 +215,39 @@ int ImpCodeGen::visit(JumpExpression* s) {
 }
 
 void ImpCodeGen::visit(ForStatement* s) {
-  string start_label = next_label();
-  string end_label = next_label();
-  
-  current_dir++;
-  VarEntry ventry;
-  ventry.dir = current_dir;
-  ventry.is_global = false;
-  direcciones.add_var(s->variable->identifier, ventry);
-  
-  BinaryExpression* range = dynamic_cast<BinaryExpression*>(s->expression);
-  if (range && range->op == RANGE_OP) {
-      range->left->accept(this);
-      codegen(nolabel, "storer", ventry.dir);
-      
-      codegen(start_label, "skip");
-      
-      codegen(nolabel, "loadr", ventry.dir);
-      range->right->accept(this);
-      codegen(nolabel, "gt");
-      codegen(nolabel, "jmpz", end_label);
-      
-      s->fbody->accept(this);
-      
-      codegen(nolabel, "loadr", ventry.dir);
-      codegen(nolabel, "push", "1");
-      codegen(nolabel, "add");
-      codegen(nolabel, "storer", ventry.dir);
-      
-      codegen(nolabel, "goto", start_label);
-      codegen(end_label, "skip");
-  }
+    string start_label = next_label();
+    string end_label = next_label();
+    
+    current_dir++;
+    VarEntry ventry;
+    ventry.dir = current_dir;
+    ventry.is_global = false;
+    direcciones.add_var(s->variable->identifier, ventry);
+
+    codegen(nolabel, "alloc", 1);
+    
+    BinaryExpression* range = dynamic_cast<BinaryExpression*>(s->expression);
+    if (range && range->op == RANGE_OP) {
+        range->left->accept(this);
+        codegen(nolabel, "storer", ventry.dir);
+        
+        codegen(start_label, "skip");
+        
+        codegen(nolabel, "loadr", ventry.dir);
+        range->right->accept(this);
+        codegen(nolabel, "gt");
+        codegen(nolabel, "jmpz", end_label);
+        
+        s->fbody->accept(this);
+        
+        codegen(nolabel, "loadr", ventry.dir);
+        codegen(nolabel, "push", "1");
+        codegen(nolabel, "add");
+        codegen(nolabel, "storer", ventry.dir);
+        
+        codegen(nolabel, "goto", start_label);
+        codegen(end_label, "skip");
+    }
 }
 
 int ImpCodeGen::visit(BinaryExpression* e) {
