@@ -1,15 +1,15 @@
 fun main() {
     var x: Int
     val y: Int
-    var z: Int
-    var a: Int
-
+    val z: Long
 
     x = 1;
-    y = 2;
-    z = 3;
-    a = 4;
+    y = 10;
+    z = 1000000;
+    x = 20;
 
     println(x)
     println(y)
+    println(z)
 }
+

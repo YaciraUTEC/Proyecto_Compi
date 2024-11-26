@@ -42,9 +42,12 @@ public:
   int visit(FunctionCallExpression* e);
   int visit(IfExpression* e);
   int visit(JumpExpression* e);
+  ImpTypeChecker* analysis;
 
 private:
-  ImpTypeChecker* analysis;
+
+  string current_function;
+
   std::ostringstream code;
   string nolabel;
   int current_label;

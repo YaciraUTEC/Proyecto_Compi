@@ -52,28 +52,20 @@ void ImpCodeGen::visit(KotlinFile* p) {
     current_dir = 0;  
     direcciones.add_level();
     process_global = true;
-
-    // Generar código inicial
-    codegen("start", "skip");
-    
-    // Procesar declaraciones globales para contar variables
-    for(auto d : p->decl) {
-        d->accept(this);
-    }
-    
-    // Actualizar espacio para variables globales
     mem_globals = current_dir;
-    codegen(nolabel, "enter", mem_globals + 1); // +1 para el frame base
-    codegen(nolabel, "alloc", mem_globals);
-    
-    process_global = false;
+    codegen("start", "skip");
 
-    // Llamar a main
+    codegen(nolabel, "enter", mem_globals);
+    codegen(nolabel, "alloc", mem_globals);
     codegen(nolabel, "mark");
     codegen(nolabel, "pusha", get_flabel("main"));
     codegen(nolabel, "call");
     codegen(nolabel, "halt");
     
+    for(auto d : p->decl) {
+        d->accept(this);
+    }
+
     direcciones.remove_level();
 }
 
@@ -105,14 +97,8 @@ void ImpCodeGen::visit(PropertyDeclaration* s) {
 }
 
 void ImpCodeGen::visit(ExpressionStatement* vd) {
-  // Si hay una expresión, evaluarla
   if (vd->expression != nullptr) {
-      // La expresión podría ser una llamada a función o cualquier otra expresión
       vd->expression->accept(this);
-      
-      // Como es un statement, descartamos el resultado si lo hubiera
-      // (por ejemplo, si es una llamada a función que retorna valor)
-      codegen(nolabel, "pop");
   }
 }
 
@@ -122,52 +108,43 @@ void ImpCodeGen::visit(FunctionDeclaration* fd) {
     current_dir = 0;
     direcciones.add_level();
     
-    // Generar etiqueta de función
+    bool prev_process_global = process_global;
+    process_global = false;
+    
+    num_params = fd->parameters.size();
+  
     codegen(get_flabel(fd->identifier), "skip");
     
-    // Calcular tamaño del frame incluyendo espacio para variables locales
-    int frame_size = fd->parameters.size() + 3; // +3 para fp, ep y pc
-    codegen(nolabel, "enter", frame_size);
+    int param_offset = -3;  // Empezar en -3 para los parámetros
+    for (auto param : fd->parameters) {
+        VarEntry ventry;
+        ventry.dir = param_offset--;
+        ventry.is_global = false;
+        direcciones.add_var(param->parameter->identifier, ventry);
+    }
     
-    // Reservar espacio para variables locales
+    // Tamaño del frame = 2 (para ep y fp) + parámetros
+    int frame_size = 2;  
+    codegen(nolabel, "enter", frame_size + fentry.mem_locals + fentry.max_stack);
     codegen(nolabel, "alloc", fentry.mem_locals);
     
-    // Procesar parámetros
-    int param_count = 0;
-    for(auto param : fd->parameters) {
-        VarEntry ventry;
-        ventry.is_global = false;
-        ventry.dir = param_count + 1; // Dirección relativa positiva
-        direcciones.add_var(param->parameter->identifier, ventry);
-        param_count++;
-    }
-    
-    // Procesar cuerpo
     fd->fbody->accept(this);
     
-    // Return implícito para Unit
-    if(fd->returnType == "Unit") {
-        codegen(nolabel, "return", fd->parameters.size() + 3);
-    }
-    
+    process_global = prev_process_global;
     direcciones.remove_level();
 }
 
 void ImpCodeGen::visit(DeclarationStatement* fd) {
-    // Procesar la declaración contenida
     if (fd->declaration != nullptr) {
-        // Delegar el procesamiento a la visita específica del tipo de declaración
         fd->declaration->accept(this);
     }
 
-    // Actualizar el número de parámetros si es necesario
     if (auto funcDecl = dynamic_cast<FunctionDeclaration*>(fd->declaration)) {
         num_params = funcDecl->parameters.size();
     }
 }
 
 void ImpCodeGen::visit(StatementList* s) {
-  // Procesar cada statement en la lista
   for (auto stmt : s->statements) {
       stmt->accept(this);
   }
@@ -193,17 +170,14 @@ int ImpCodeGen::visit(IfExpression* s) {
     string else_label = next_label();
     string end_label = next_label();
     
-    // Evaluar condición
     s->condition->accept(this);
     codegen(nolabel, "jmpz", else_label);
     
-    // Cuerpo del then
     if (s->thenBody != nullptr) {
         s->thenBody->accept(this);
     }
     codegen(nolabel, "goto", end_label);
     
-    // Cuerpo del else
     codegen(else_label, "skip");
     if (s->elseBody != nullptr) {
         s->elseBody->accept(this);
@@ -228,9 +202,9 @@ void ImpCodeGen::visit(WhileStatement* s) {
 }
 
 int ImpCodeGen::visit(JumpExpression* s) {
-  // Manejar return expressions
   if (s->returnExpression != nullptr) {
       s->returnExpression->accept(this);
+      codegen(nolabel, "storer", -1 * (num_params + 3));
   }
   codegen(nolabel, "return", num_params + 3);
   return 0;
@@ -240,39 +214,31 @@ void ImpCodeGen::visit(ForStatement* s) {
   string start_label = next_label();
   string end_label = next_label();
   
-  // Reservar espacio para la variable del loop
   current_dir++;
   VarEntry ventry;
   ventry.dir = current_dir;
   ventry.is_global = false;
   direcciones.add_var(s->variable->identifier, ventry);
   
-  // Obtener rango (start..end)
   BinaryExpression* range = dynamic_cast<BinaryExpression*>(s->expression);
   if (range && range->op == RANGE_OP) {
-      // Inicializar contador
       range->left->accept(this);
       codegen(nolabel, "storer", ventry.dir);
       
-      // Inicio del loop
       codegen(start_label, "skip");
       
-      // Cargar contador y comparar con fin
       codegen(nolabel, "loadr", ventry.dir);
       range->right->accept(this);
       codegen(nolabel, "gt");
       codegen(nolabel, "jmpz", end_label);
       
-      // Ejecutar cuerpo
       s->fbody->accept(this);
       
-      // Incrementar contador
       codegen(nolabel, "loadr", ventry.dir);
       codegen(nolabel, "push", "1");
       codegen(nolabel, "add");
       codegen(nolabel, "storer", ventry.dir);
       
-      // Volver al inicio
       codegen(nolabel, "goto", start_label);
       codegen(end_label, "skip");
   }
@@ -325,8 +291,16 @@ int ImpCodeGen::visit(LiteralExpression* e) {
   return 0;
 }
 
-
 int ImpCodeGen::visit(IdentifierExpression* e) {
+    if (!process_global) {
+        VarEntry ventry = direcciones.lookup(e->identifier);
+        
+        if (ventry.dir < 0) {
+            codegen(nolabel, "loadr", ventry.dir);
+            return 0;
+        }
+    }
+    
     VarEntry ventry = direcciones.lookup(e->identifier);
     if (ventry.is_global) {
         codegen(nolabel, "load", ventry.dir);
@@ -337,23 +311,16 @@ int ImpCodeGen::visit(IdentifierExpression* e) {
 }
 
 int ImpCodeGen::visit(FunctionCallExpression* e) {
-  // Obtener información de la función
-  // FEntry fentry = analysis->ftable.lookup(e->identifier);
+  FEntry fentry = analysis->ftable.lookup(e->identifier);
   
-  // // Reservar espacio para valor de retorno si no es Unit
-  // if (!fentry.ftype.match(analysis->unittype)) {
-  //     codegen(nolabel, "alloc", 1);
-  // }
+  codegen(nolabel, "alloc", 1);
   
-  // // Evaluar y apilar argumentos
-  // for (auto arg : e->arguments) {
-  //     arg->accept(this);
-  // }
+  for (auto arg : e->arguments) {
+      arg->accept(this);
+  }
   
-  // // Llamar a la función
-  // codegen(nolabel, "mark");
-  // codegen(nolabel, "pusha", get_flabel(e->identifier));
-  // codegen(nolabel, "call");
-  
+  codegen(nolabel, "mark");
+  codegen(nolabel, "pusha", get_flabel(e->identifier));
+  codegen(nolabel, "call");
   return 0;
 }

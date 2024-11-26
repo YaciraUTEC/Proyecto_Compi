@@ -22,7 +22,7 @@ class ImpTypeChecker : public TypeVisitor {
 public:
   ImpTypeChecker();
   Environment<FEntry> ftable;  
-private:
+// private:
   Environment<ImpType> env;
   bool has_main;
   ImpType booltype;
@@ -37,7 +37,7 @@ private:
   void sp_decr(int n);
   void sp_incr(int n);
 
-public:
+// public:
   void typecheck(KotlinFile*);
 
   void visit(KotlinFile* kf);
