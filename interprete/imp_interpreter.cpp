@@ -277,19 +277,16 @@ void ImpInterpreter::visit(PrintlnStatement* s) {
 
 ImpValue ImpInterpreter::visit(IfExpression* s) {
 
-    // Evaluar la condición
     ImpValue condition = s->condition->accept(this);
 
-    // Verificar que la condición sea booleana
     if (condition.type != TBOOL) {
         cout << "Error: La condición del if debe ser booleana" << endl;
         exit(0);
     }
 
     ImpValue result;
-    result.type = NOTYPE;  // Inicializar resultado
+    result.type = NOTYPE;
 
-    // Ejecutar el bloque correspondiente según la condición
     env.add_level();
     
     if (condition.bool_value) {
@@ -325,7 +322,6 @@ ImpValue ImpInterpreter::visit(JumpExpression* s) {
 
 void ImpInterpreter::visit(ForStatement* s) {
     env.add_level();
-    // Obtener los valores inicial y final directamente de la expresión binaria
     BinaryExpression* rangeExp = dynamic_cast<BinaryExpression*>(s->expression);
     if (!rangeExp || rangeExp->op != RANGE_OP) {
         cout << "Error: Se esperaba una expresión de rango (..)" << endl;
@@ -335,24 +331,19 @@ void ImpInterpreter::visit(ForStatement* s) {
     ImpValue start = rangeExp->left->accept(this);
     ImpValue end = rangeExp->right->accept(this);
 
-    // Verificar que ambos valores sean enteros
     if (start.type != TINT || end.type != TINT) {
         cout << "Error: Los límites del rango deben ser enteros" << endl;
         exit(0);
     }
 
-    // Iterar sobre el rango
     for (int i = start.int_value; i <= end.int_value; i++) {
-        // Crear y asignar la variable de iteración
         ImpValue iteratorValue;
         iteratorValue.type = TINT;
         iteratorValue.int_value = i;
         env.add_var(s->variable->identifier, iteratorValue);
 
-        // Ejecutar el cuerpo del for
         s->fbody->accept(this);
 
-        // Si hay un return, salir del bucle
         if (retcall) break;
     }
 
@@ -381,7 +372,6 @@ ImpValue ImpInterpreter::visit(BinaryExpression* e) {
         exit(0);
     }
 
-    // Si alguno es Long, el resultado es Long
     bool isLongOperation = (v1.type == TLONG || v2.type == TLONG);
 
     if (!isLongOperation) {
@@ -550,7 +540,6 @@ ImpValue ImpInterpreter::visit(IdentifierExpression* e) {
 
 ImpValue ImpInterpreter::visit(FunctionCallExpression* e) {
 
-    // Verificar que la función exista
     if (!fdecs.check(e->identifier)) {
         cout << "Error: Función " << e->identifier << " no definida" << endl;
         exit(0);
@@ -559,13 +548,11 @@ ImpValue ImpInterpreter::visit(FunctionCallExpression* e) {
     FunctionDeclaration* fd = fdecs.lookup(e->identifier);
     env.add_level();
 
-    // Verificar número de argumentos
     if (fd->parameters.size() != e->arguments.size()) {
         cout << "Error: Número incorrecto de argumentos para " << e->identifier << endl;
         exit(0);
     }
 
-    // Evaluar y asignar argumentos
     auto paramIt = fd->parameters.begin();
     auto argIt = e->arguments.begin();
     for (; paramIt != fd->parameters.end(); ++paramIt, ++argIt) {
@@ -573,7 +560,6 @@ ImpValue ImpInterpreter::visit(FunctionCallExpression* e) {
         env.add_var((*paramIt)->parameter->identifier, v);
     }
 
-    // Ejecutar cuerpo de la función
     retcall = false;
     fd->fbody->accept(this);
     

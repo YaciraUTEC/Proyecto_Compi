@@ -75,11 +75,9 @@ void ImpTypeChecker::visit(PropertyDeclaration* vd) {
         exit(0);
     }
     
-    // Para variables con inicialización
     if (vd->expression != nullptr) {
         ImpType expr_type = vd->expression->accept(this);
         
-        // Permitir asignación de Int a Long (promoción implícita)
         if (!expr_type.match(type) && 
             !(type.ttype == ImpType::LONG && expr_type.ttype == ImpType::INT)) {
             cout << "Error: Tipo de expresión no coincide con tipo declarado para " << vd->variable->identifier << endl;
@@ -98,12 +96,10 @@ void ImpTypeChecker::visit(FunctionDeclaration* fd) {
     ImpType funtype;
     list<string> paramTypes;
 
-    // Guardar estado actual
     int saved_dir = dir;
     int saved_sp = sp;
     int saved_max_sp = max_sp;
     
-    // Reiniciar contadores para la nueva función
     dir = 0;
     sp = 0;
     max_sp = 0;
@@ -136,11 +132,9 @@ void ImpTypeChecker::visit(FunctionDeclaration* fd) {
         }
     }
     
-    // Agregar función al ambiente
     env.add_var(fd->identifier, funtype);
     env.add_level();
 
-    // Agregar parámetros al ambiente
     for (auto p : fd->parameters) {
         ImpType ptype;
         if (!ptype.set_basic_type(p->parameter->type)) {
@@ -151,15 +145,12 @@ void ImpTypeChecker::visit(FunctionDeclaration* fd) {
         dir++;
     }
 
-    // Agregar tipo de retorno al ambiente
     ImpType returnType;
     returnType.set_basic_type(fd->returnType);
-    env.add_var("return", returnType);  // Usar tipo de retorno específico
+    env.add_var("return", returnType);
     
-    // Verificar cuerpo de la función
     fd->fbody->accept(this);
     
-    // Crear entrada en la tabla de funciones
     FEntry fentry;
     fentry.fname = fd->identifier;
     fentry.ftype = funtype;
@@ -224,12 +215,10 @@ ImpType ImpTypeChecker::visit(JumpExpression* s) {
     
     if (s->returnExpression != nullptr) {
         etype = s->returnExpression->accept(this);
-        // sp_decr(1);
     } else {
         etype.set_basic_type("Unit");
     }
     
-    // Verificar que el tipo de retorno coincida
     if (!etype.match(rtype)) {
         cout << "Error: tipo de retorno no coincide" << endl;
         cout << "Esperado: " << rtype << ", Encontrado: " << etype << endl;
@@ -340,7 +329,6 @@ ImpType ImpTypeChecker::visit(BinaryExpression* e) {
     ImpType t1 = e->left->accept(this);
     ImpType t2 = e->right->accept(this);
     
-    // Para operaciones de rango (mantener solo para Int)
     if (e->op == RANGE_OP) {
         if (!t1.match(inttype) || !t2.match(inttype)) {
             cout << "Los operandos del rango deben ser enteros" << endl;
@@ -352,9 +340,7 @@ ImpType ImpTypeChecker::visit(BinaryExpression* e) {
     
     ImpType result;
     
-    // Operaciones aritméticas
     if (e->op == ADD_OP || e->op == SUB_OP || e->op == MUL_OP || e->op == DIV_OP) {
-        // Validar que sean tipos numéricos (Int o Long)
         if ((!t1.match(inttype) && !t1.match(longtype)) || 
             (!t2.match(inttype) && !t2.match(longtype))) {
             cout << "Error: Operaciones aritméticas requieren tipos numéricos" << endl;
@@ -362,16 +348,13 @@ ImpType ImpTypeChecker::visit(BinaryExpression* e) {
             exit(0);
         }
         
-        // Si alguno es Long, el resultado es Long
         if (t1.match(longtype) || t2.match(longtype)) {
             result = longtype;
         } else {
             result = inttype;
         }
     }
-    // Operaciones de comparación
     else if (e->op == LT_OP || e->op == LE_OP || e->op == GT_OP || e->op == GE_OP || e->op == EQ_OP || e->op == NE_OP) {
-        // Permitir comparaciones entre tipos numéricos
         if ((!t1.match(inttype) && !t1.match(longtype)) || 
             (!t2.match(inttype) && !t2.match(longtype))) {
             cout << "Error: Comparaciones requieren tipos numéricos" << endl;
@@ -380,7 +363,6 @@ ImpType ImpTypeChecker::visit(BinaryExpression* e) {
         }
         result = booltype;
     }
-    // Operaciones lógicas
     else if (e->op == AND_OP || e->op == OR_OP) {
         if (!t1.match(booltype) || !t2.match(booltype)) {
             cout << "Error: Operaciones lógicas requieren tipos booleanos" << endl;
@@ -417,7 +399,6 @@ ImpType ImpTypeChecker::visit(FunctionCallExpression* e) {
         exit(0);
     }
     
-    // Verificar argumentos
     if (funtype.types.size()-1 != e->arguments.size()) {
         cout << "Error: número incorrecto de argumentos para " << e->identifier << endl;
         exit(0);
@@ -437,7 +418,6 @@ ImpType ImpTypeChecker::visit(FunctionCallExpression* e) {
     
     sp_decr(e->arguments.size());
     
-    // Retornar tipo de retorno
     ImpType rtype;
     rtype.set_basic_type(funtype.types.back());
     if (!rtype.match(unittype)) {
